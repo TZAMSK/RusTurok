@@ -6,12 +6,14 @@ mod world;
 use bevy::prelude::*;
 
 use camera::CameraPlugin;
+use settings::{exit, settings};
 use world::WorldPlugin;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(settings()))
         .add_plugins(WorldPlugin)
         .add_plugins(CameraPlugin)
+        .add_systems(Update, exit)
         .run();
 }
