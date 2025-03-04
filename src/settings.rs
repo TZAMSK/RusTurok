@@ -2,6 +2,7 @@ use bevy::{
     prelude::*,
     window::{CursorOptions, WindowMode, WindowPlugin},
 };
+use bevy_fps_counter::FpsCounter;
 
 pub fn settings() -> WindowPlugin {
     WindowPlugin {
@@ -14,6 +15,16 @@ pub fn settings() -> WindowPlugin {
             ..default()
         }),
         ..default()
+    }
+}
+
+pub fn fps(keyboard: Res<ButtonInput<KeyCode>>, mut diags_state: ResMut<FpsCounter>) {
+    if keyboard.just_pressed(KeyCode::KeyP) {
+        if diags_state.is_enabled() {
+            diags_state.disable();
+        } else {
+            diags_state.enable();
+        }
     }
 }
 
