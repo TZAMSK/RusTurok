@@ -3,12 +3,12 @@ mod systems;
 
 use bevy::prelude::*;
 
-use systems::move_player_camera;
+use systems::{move_player, move_player_camera};
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, move_player_camera);
+        app.add_systems(Update, (move_player_camera, move_player));
     }
 }

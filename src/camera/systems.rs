@@ -25,7 +25,7 @@ pub fn spawn_camera(
 
     commands
         .spawn((
-            Player,
+            Player::new(),
             CameraSensitivity::default(),
             Transform::from_xyz(0.0, 1.0, 0.0),
             Visibility::default(),

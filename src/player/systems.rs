@@ -26,3 +26,34 @@ pub fn move_player_camera(
         transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
     }
 }
+
+pub fn move_player(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut player_query: Query<(&Player, &mut Transform), With<Player>>,
+    time: Res<Time>,
+) {
+    if let Ok((player, mut player_transform)) = player_query.get_single_mut() {
+        let mut direction = Vec3::ZERO;
+
+        if keyboard_input.pressed(KeyCode::KeyW) {
+            direction += *player_transform.forward()
+        }
+
+        if keyboard_input.pressed(KeyCode::KeyA) {
+            direction -= *player_transform.right()
+        }
+
+        if keyboard_input.pressed(KeyCode::KeyS) {
+            direction -= *player_transform.forward()
+        }
+
+        if keyboard_input.pressed(KeyCode::KeyD) {
+            direction += *player_transform.right()
+        }
+
+        if direction.length() > 0.0 {
+            player_transform.translation +=
+                direction.normalize() * player.speed * time.delta_secs();
+        }
+    }
+}
