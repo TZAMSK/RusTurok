@@ -35,20 +35,26 @@ pub fn move_player(
     if let Ok((player, mut player_transform)) = player_query.get_single_mut() {
         let mut direction = Vec3::ZERO;
 
+        let forward = player_transform.forward();
+        let right = player_transform.right();
+
+        let horizontal_forward = Vec3::new(forward.x, 0.0, forward.z);
+        let horizontal_right = Vec3::new(right.x, 0.0, right.z);
+
         if keyboard_input.pressed(KeyCode::KeyW) {
-            direction += *player_transform.forward()
+            direction += horizontal_forward;
         }
 
         if keyboard_input.pressed(KeyCode::KeyA) {
-            direction -= *player_transform.right()
+            direction -= horizontal_right;
         }
 
         if keyboard_input.pressed(KeyCode::KeyS) {
-            direction -= *player_transform.forward()
+            direction -= horizontal_forward;
         }
 
         if keyboard_input.pressed(KeyCode::KeyD) {
-            direction += *player_transform.right()
+            direction += horizontal_right;
         }
 
         if direction.length() > 0.0 {
