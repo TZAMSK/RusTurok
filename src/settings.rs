@@ -1,6 +1,6 @@
 use bevy::{
     prelude::*,
-    window::{CursorOptions, WindowMode, WindowPlugin},
+    window::{CursorGrabMode, CursorOptions, WindowMode, WindowPlugin},
 };
 use bevy_fps_counter::FpsCounter;
 
@@ -9,6 +9,7 @@ pub fn settings() -> WindowPlugin {
         primary_window: Some(Window {
             cursor_options: CursorOptions {
                 visible: false,
+                grab_mode: CursorGrabMode::Confined,
                 ..default()
             },
             mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
