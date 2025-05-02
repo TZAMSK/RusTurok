@@ -1,4 +1,4 @@
-use ::bevy::{
+use bevy::{
     asset::Assets,
     ecs::system::{Commands, ResMut},
 };
@@ -35,7 +35,7 @@ pub fn spawn_camera(
                 WorldModelCamera,
                 Camera3d::default(),
                 Projection::from(PerspectiveProjection {
-                    fov: 120.0_f32.to_radians(),
+                    fov: 160.0_f32.to_radians(),
                     ..default()
                 }),
             ));

@@ -7,6 +7,7 @@ use bevy_fps_counter::FpsCounter;
 pub fn settings() -> WindowPlugin {
     WindowPlugin {
         primary_window: Some(Window {
+            present_mode: bevy::window::PresentMode::AutoNoVsync,
             cursor_options: CursorOptions {
                 visible: false,
                 grab_mode: CursorGrabMode::Confined,

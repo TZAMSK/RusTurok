@@ -9,7 +9,7 @@ pub fn spawn_world_model(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let floor = meshes.add(Plane3d::new(Vec3::Y, Vec2::splat(10.0)));
+    let floor = meshes.add(Plane3d::new(Vec3::Y, Vec2::splat(100.0)));
     let material = materials.add(Color::WHITE);
 
     commands.spawn((Mesh3d(floor), MeshMaterial3d(material.clone()), World));
