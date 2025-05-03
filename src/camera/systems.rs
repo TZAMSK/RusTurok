@@ -3,9 +3,7 @@ use bevy::{
     ecs::system::{Commands, ResMut},
 };
 
-use bevy::{
-    color::palettes::tailwind, pbr::NotShadowCaster, prelude::*, render::view::RenderLayers,
-};
+use bevy::{prelude::*, render::view::RenderLayers};
 
 use crate::{
     camera::{
@@ -13,17 +11,14 @@ use crate::{
         renderlayers::VIEW_MODEL_RENDER_LAYER,
     },
     player::components::Player,
-    weapons::components::{PrimaryWeaponType, Weapon, WeaponType},
+    weapons::systems::spawn_weapon,
 };
 
 pub fn spawn_camera(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let arm = meshes.add(Cuboid::new(0.1, 0.1, 0.5));
-    let arm_material = materials.add(Color::from(tailwind::TEAL_200));
-
     commands
         .spawn((
             Player::new(),
@@ -36,34 +31,27 @@ pub fn spawn_camera(
                 WorldModelCamera,
                 Camera3d::default(),
                 Projection::from(PerspectiveProjection {
-                    fov: 160.0_f32.to_radians(),
+                    fov: 140.0_f32.to_radians(),
                     ..default()
                 }),
             ));
 
-            parent.spawn((
-                Camera3d::default(),
-                Camera {
-                    order: 1,
-                    ..default()
-                },
-                Projection::from(PerspectiveProjection {
-                    fov: 80.0_f32.to_radians(),
-                    ..default()
-                }),
-                RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
-            ));
-
-            parent.spawn((
-                Mesh3d(arm),
-                MeshMaterial3d(arm_material),
-                Transform::from_xyz(0.2, -0.1, -0.25),
-                RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
-                NotShadowCaster,
-                Weapon::new(
-                    "a gun".to_string(),
-                    WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
-                ),
-            ));
+            spawn_view_model_camera(parent);
+            spawn_weapon(parent, meshes, materials);
         });
+}
+
+fn spawn_view_model_camera(parent: &mut impl ChildBuild) {
+    parent.spawn((
+        Camera3d::default(),
+        Camera {
+            order: 1,
+            ..default()
+        },
+        Projection::from(PerspectiveProjection {
+            fov: 80.0_f32.to_radians(),
+            ..default()
+        }),
+        RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
+    ));
 }

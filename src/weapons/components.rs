@@ -9,9 +9,9 @@ pub struct Weapon {
 #[derive(Debug, PartialEq)]
 pub struct WeaponTrait {
     pub bullet_speed: f32,
-    pub mag_size: f32,
+    pub mag_size: u32,
     pub stats: Stats,
-    pub total_bullets: f32,
+    pub total_bullets: u32,
     pub weapon_type: WeaponType,
 }
 
@@ -62,9 +62,9 @@ impl Default for WeaponTrait {
     fn default() -> Self {
         Self {
             bullet_speed: 100.0,
-            mag_size: 20.0,
+            mag_size: 20,
             stats: Stats::default(),
-            total_bullets: 200.0,
+            total_bullets: 200,
             weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::Sidearm),
         }
     }
@@ -92,8 +92,8 @@ impl WeaponTrait {
 
     fn hand_cannon() -> Self {
         Self {
-            mag_size: 11.0,
-            total_bullets: 120.0,
+            mag_size: 11,
+            total_bullets: 120,
             weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::HandCannon),
             ..Self::default()
         }
@@ -101,8 +101,17 @@ impl WeaponTrait {
 
     fn auto_rifle() -> Self {
         Self {
-            mag_size: 11.0,
-            total_bullets: 120.0,
+            mag_size: 32,
+            stats: Stats {
+                range: 20.0,
+                stability: 50.0,
+                handling: 50.0,
+                reload: 45.0,
+                round_per_minute: 600.0,
+                aim_assist: 10.0,
+                zoom: 14.0,
+            },
+            total_bullets: 400,
             weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
             ..Self::default()
         }
@@ -114,8 +123,8 @@ impl WeaponTrait {
 
     fn shotgun() -> Self {
         Self {
-            mag_size: 3.0,
-            total_bullets: 20.0,
+            mag_size: 3,
+            total_bullets: 20,
             weapon_type: WeaponType::SecondaryWeaponType(SecondaryWeaponType::Shotgun),
             ..Self::default()
         }
@@ -123,8 +132,8 @@ impl WeaponTrait {
 
     fn sniper() -> Self {
         Self {
-            mag_size: 11.0,
-            total_bullets: 120.0,
+            mag_size: 4,
+            total_bullets: 20,
             weapon_type: WeaponType::SecondaryWeaponType(SecondaryWeaponType::Sniper),
             ..Self::default()
         }
