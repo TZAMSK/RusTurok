@@ -24,7 +24,7 @@ pub fn spawn_lights(mut commands: Commands) {
             shadows_enabled: true,
             ..default()
         },
-        Transform::from_xyz(-2.0, -4.0, -0.8),
+        Transform::from_xyz(0.0, 0.0, 0.0),
         RenderLayers::from_layers(&[DEFAULT_RENDER_LAYER, VIEW_MODEL_RENDER_LAYER]),
     ));
 }

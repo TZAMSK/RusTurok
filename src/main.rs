@@ -2,6 +2,7 @@ mod camera;
 mod crosshair;
 mod player;
 mod settings;
+mod weapons;
 mod world;
 
 use bevy::prelude::*;
@@ -18,9 +19,9 @@ fn main() {
         .add_plugins(DefaultPlugins.set(settings()))
         .add_plugins(FpsCounterPlugin)
         .add_systems(Update, fps)
+        .add_plugins(CrosshairPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(CameraPlugin)
-        .add_plugins(CrosshairPlugin)
         .add_plugins(PlayerPlugin)
         .add_systems(Update, exit)
         .run();

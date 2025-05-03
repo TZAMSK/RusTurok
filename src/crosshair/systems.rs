@@ -16,16 +16,10 @@ pub fn spawn_crosshair(
     let crosshair = Crosshair::new();
 
     commands.spawn((
-        Node {
-            width: Val::Px(crosshair.size),
-            height: Val::Px(crosshair.size),
-            position_type: PositionType::Absolute,
-            ..default()
-        },
         Mesh2d(meshes.add(Circle::new(crosshair.size / 2.0))),
         MeshMaterial2d(material.add(ColorMaterial::from_color(SEA_GREEN))),
-        RenderLayers::layer(CROSSHAIR_LENDER_LAYER),
-        Transform::from_xyz(window.width() / 2.0, window.width() / 2.0, 1.0),
+        Transform::from_xyz(window.width() / 2.0, window.width() / 2.0, 0.0),
         Camera2d,
+        RenderLayers::layer(CROSSHAIR_LENDER_LAYER),
     ));
 }

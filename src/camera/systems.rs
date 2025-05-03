@@ -13,6 +13,7 @@ use crate::{
         renderlayers::VIEW_MODEL_RENDER_LAYER,
     },
     player::components::Player,
+    weapons::components::{PrimaryWeaponType, Weapon, WeaponType},
 };
 
 pub fn spawn_camera(
@@ -59,6 +60,10 @@ pub fn spawn_camera(
                 Transform::from_xyz(0.2, -0.1, -0.25),
                 RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
                 NotShadowCaster,
+                Weapon::new(
+                    "a gun".to_string(),
+                    WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
+                ),
             ));
         });
 }
