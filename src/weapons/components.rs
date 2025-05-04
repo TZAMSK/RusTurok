@@ -1,13 +1,19 @@
-use bevy::prelude::Component;
+use bevy::{ecs::component::Component, math::Vec3};
+
+#[derive(Component)]
+pub struct BulletTracer;
+
+#[derive(Component)]
+pub struct BulletDirection(pub Vec3);
+
+#[derive(Component)]
+pub struct Bullet;
 
 #[derive(Debug, Component, PartialEq)]
 pub struct Weapon {
     pub name: String,
     pub unique_trait: WeaponTrait,
 }
-
-#[derive(Component)]
-pub struct Bullet;
 
 #[derive(Debug, PartialEq)]
 pub struct WeaponTrait {
@@ -64,7 +70,7 @@ impl Default for Stats {
 impl Default for WeaponTrait {
     fn default() -> Self {
         Self {
-            bullet_speed: 1.0,
+            bullet_speed: 40.0,
             mag_size: 20,
             stats: Stats::default(),
             total_bullets: 200,

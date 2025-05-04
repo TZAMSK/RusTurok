@@ -1,7 +1,4 @@
-use bevy::{
-    asset::Assets,
-    ecs::system::{Commands, ResMut},
-};
+use bevy::ecs::system::Commands;
 
 use bevy::{prelude::*, render::view::RenderLayers};
 
@@ -13,11 +10,7 @@ use crate::{
 
 use super::components::{FirstLayerCamera, SecondLayerCamera};
 
-pub fn spawn_camera(
-    mut commands: Commands,
-    meshes: ResMut<Assets<Mesh>>,
-    materials: ResMut<Assets<StandardMaterial>>,
-) {
+pub fn spawn_camera(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         Player::new(),
         CameraSensitivity::default(),
@@ -26,7 +19,7 @@ pub fn spawn_camera(
         Children::spawn((
             spawn_main_camera(),
             spawn_view_model_camera(),
-            spawn_weapon(meshes, materials),
+            spawn_weapon(asset_server),
         )),
     ));
 }
