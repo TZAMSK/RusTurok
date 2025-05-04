@@ -4,12 +4,13 @@ mod tests;
 
 use bevy::prelude::*;
 
-use systems::spawn_bullets;
+use systems::{bullet_movement, spawn_bullets};
 
 pub struct WeaponPlugin;
 
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_bullets);
+        app.add_systems(Update, spawn_bullets)
+            .add_systems(Update, bullet_movement);
     }
 }

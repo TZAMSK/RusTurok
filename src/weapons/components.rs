@@ -6,6 +6,9 @@ pub struct Weapon {
     pub unique_trait: WeaponTrait,
 }
 
+#[derive(Component)]
+pub struct Bullet;
+
 #[derive(Debug, PartialEq)]
 pub struct WeaponTrait {
     pub bullet_speed: f32,
@@ -61,7 +64,7 @@ impl Default for Stats {
 impl Default for WeaponTrait {
     fn default() -> Self {
         Self {
-            bullet_speed: 100.0,
+            bullet_speed: 1.0,
             mag_size: 20,
             stats: Stats::default(),
             total_bullets: 200,
