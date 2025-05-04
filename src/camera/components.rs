@@ -4,7 +4,10 @@ use bevy::prelude::*;
 pub struct CameraSensitivity(Vec2);
 
 #[derive(Debug, Component)]
-pub struct WorldModelCamera;
+pub struct FirstLayerCamera;
+
+#[derive(Debug, Component)]
+pub struct SecondLayerCamera;
 
 impl Default for CameraSensitivity {
     fn default() -> Self {

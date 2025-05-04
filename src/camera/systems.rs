@@ -6,13 +6,12 @@ use bevy::{
 use bevy::{prelude::*, render::view::RenderLayers};
 
 use crate::{
-    camera::{
-        components::{CameraSensitivity, WorldModelCamera},
-        renderlayers::VIEW_MODEL_RENDER_LAYER,
-    },
+    camera::{components::CameraSensitivity, renderlayers::VIEW_MODEL_RENDER_LAYER},
     player::components::Player,
     weapons::systems::spawn_weapon,
 };
+
+use super::components::{FirstLayerCamera, SecondLayerCamera};
 
 pub fn spawn_camera(
     mut commands: Commands,
@@ -25,22 +24,41 @@ pub fn spawn_camera(
         Transform::from_xyz(0.0, 1.0, 0.0),
         Visibility::default(),
         Children::spawn((
-            Spawn((
-                WorldModelCamera,
-                Camera3d::default(),
-                Projection::from(PerspectiveProjection {
-                    fov: 140.0_f32.to_radians(),
-                    ..default()
-                }),
-            )),
+            spawn_main_camera(),
             spawn_view_model_camera(),
             spawn_weapon(meshes, materials),
         )),
     ));
 }
 
-fn spawn_view_model_camera() -> Spawn<(Camera3d, Projection, RenderLayers)> {
+fn spawn_main_camera() -> Spawn<(FirstLayerCamera, Camera, Camera3d, Projection)> {
     Spawn((
+        FirstLayerCamera,
+        Camera {
+            order: 1,
+            ..default()
+        },
+        Camera3d::default(),
+        Projection::from(PerspectiveProjection {
+            fov: 140.0_f32.to_radians(),
+            ..default()
+        }),
+    ))
+}
+
+fn spawn_view_model_camera() -> Spawn<(
+    SecondLayerCamera,
+    Camera,
+    Camera3d,
+    Projection,
+    RenderLayers,
+)> {
+    Spawn((
+        SecondLayerCamera,
+        Camera {
+            order: 2,
+            ..default()
+        },
         Camera3d::default(),
         Projection::from(PerspectiveProjection {
             fov: 80.0_f32.to_radians(),
