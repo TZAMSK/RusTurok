@@ -19,39 +19,33 @@ pub fn spawn_camera(
     meshes: ResMut<Assets<Mesh>>,
     materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands
-        .spawn((
-            Player::new(),
-            CameraSensitivity::default(),
-            Transform::from_xyz(0.0, 1.0, 0.0),
-            Visibility::default(),
-        ))
-        .with_children(|parent| {
-            parent.spawn((
+    commands.spawn((
+        Player::new(),
+        CameraSensitivity::default(),
+        Transform::from_xyz(0.0, 1.0, 0.0),
+        Visibility::default(),
+        Children::spawn((
+            Spawn((
                 WorldModelCamera,
                 Camera3d::default(),
                 Projection::from(PerspectiveProjection {
                     fov: 140.0_f32.to_radians(),
                     ..default()
                 }),
-            ));
-
-            spawn_view_model_camera(parent);
-            spawn_weapon(parent, meshes, materials);
-        });
+            )),
+            spawn_view_model_camera(),
+            spawn_weapon(meshes, materials),
+        )),
+    ));
 }
 
-fn spawn_view_model_camera(parent: &mut impl ChildBuild) {
-    parent.spawn((
+fn spawn_view_model_camera() -> Spawn<(Camera3d, Projection, RenderLayers)> {
+    Spawn((
         Camera3d::default(),
-        Camera {
-            order: 1,
-            ..default()
-        },
         Projection::from(PerspectiveProjection {
             fov: 80.0_f32.to_radians(),
             ..default()
         }),
         RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
-    ));
+    ))
 }

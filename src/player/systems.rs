@@ -30,7 +30,7 @@ pub fn move_player(
     mut player_query: Query<(&Player, &mut Transform), With<Player>>,
     time: Res<Time>,
 ) {
-    if let Ok((player, mut player_transform)) = player_query.get_single_mut() {
+    if let Ok((player, mut player_transform)) = player_query.single_mut() {
         let mut direction = Vec3::ZERO;
 
         let forward = player_transform.forward();
