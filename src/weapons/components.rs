@@ -70,7 +70,7 @@ impl Default for Stats {
 impl Default for WeaponTrait {
     fn default() -> Self {
         Self {
-            bullet_speed: 40.0,
+            bullet_speed: 1000.0,
             mag_size: 20,
             stats: Stats::default(),
             total_bullets: 200,

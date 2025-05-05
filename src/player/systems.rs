@@ -19,7 +19,7 @@ pub fn move_player_camera(
         let yaw = yaw + delta_yaw;
 
         const PITCH_LIMIT: f32 = FRAC_2_PI;
-        let pitch = (pitch + delta_pitch).clamp(-PITCH_LIMIT * 1.0, PITCH_LIMIT * 2.0);
+        let pitch = (pitch + delta_pitch).clamp(-PITCH_LIMIT * 2.0, PITCH_LIMIT * 2.0);
 
         transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
     }

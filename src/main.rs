@@ -14,7 +14,7 @@ use camera::CameraPlugin;
 use crosshair::CrosshairPlugin;
 use player::PlayerPlugin;
 use settings::{exit, fps, settings};
-use weapons::WeaponPlugin;
+use weapons::{BulletPlugin, WeaponPlugin};
 use world::WorldPlugin;
 
 fn main() {
@@ -31,6 +31,7 @@ fn main() {
         .add_plugins(CameraPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(WeaponPlugin)
+        .add_plugins(BulletPlugin)
         .add_systems(Update, exit)
         .run();
 }
