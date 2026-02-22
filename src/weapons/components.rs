@@ -1,5 +1,22 @@
 use bevy::{ecs::component::Component, math::Vec3};
 
+pub use super::wobble::{GunBob, GunWobble};
+
+#[derive(Component)]
+pub struct GunAnimation {
+    pub wobble: GunWobble,
+    pub bob: GunBob,
+}
+
+impl Default for GunAnimation {
+    fn default() -> Self {
+        Self {
+            wobble: GunWobble::default(),
+            bob: GunBob::default(),
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct BulletTracer;
 

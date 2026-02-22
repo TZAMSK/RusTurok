@@ -3,7 +3,10 @@ use bevy::{
     render::view::RenderLayers,
 };
 
-use crate::camera::{components::FirstLayerCamera, renderlayers::VIEW_MODEL_RENDER_LAYER};
+use crate::{
+    camera::{components::FirstLayerCamera, renderlayers::VIEW_MODEL_RENDER_LAYER},
+    weapons::components::GunAnimation,
+};
 
 use super::{
     bullets::DespawnAfter,
@@ -17,6 +20,7 @@ pub fn spawn_weapon(
     Transform,
     RenderLayers,
     Weapon,
+    GunAnimation,
     SpawnRelatedBundle<ChildOf, Spawn<(Transform, BulletTracer)>>,
 )> {
     Spawn((
@@ -27,6 +31,7 @@ pub fn spawn_weapon(
             "a gun".to_string(),
             WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
         ),
+        GunAnimation::default(),
         Children::spawn(Spawn((
             Transform {
                 translation: Vec3::new(0.53, -0.46, -2.15),
@@ -47,7 +52,8 @@ pub fn spawn_bullets(
     asset_server: Res<AssetServer>,
     time: Res<Time>,
 ) {
-    if mouse_input.pressed(MouseButton::Left) {
+    // Changed from .pressed() to .just_pressed() – prevents insane fire rate
+    if mouse_input.just_pressed(MouseButton::Left) {
         let arm = meshes.add(Cuboid::new(0.04, 0.04, 0.1));
         let arm_material = materials.add(Color::from(tailwind::YELLOW_500));
 
@@ -56,6 +62,7 @@ pub fn spawn_bullets(
 
         let start = tracer_transform.translation();
         let direction = camera_transform.forward().normalize();
+
         commands.spawn((
             Mesh3d(arm),
             MeshMaterial3d(arm_material),
@@ -68,6 +75,7 @@ pub fn spawn_bullets(
             BulletDirection(direction),
         ));
 
+        // muzzle flash (x2 planes)
         for i in 1..=2 {
             let rotation_axis: Vec3 = match i {
                 1 => Vec3::X,
@@ -89,7 +97,7 @@ pub fn spawn_bullets(
                     rotation: Quat::from_rotation_arc(rotation_axis, direction),
                     ..default()
                 },
-                DespawnAfter(time.elapsed_secs() + 0.001),
+                DespawnAfter(time.elapsed_secs() + 0.05), // ← was 0.001 → too short
             ));
         }
     }
