@@ -16,14 +16,14 @@ pub fn handle_ads_input(
 }
 
 pub fn update_ads(
-    mut ads_input: ResMut<ADSInput>,
+    ads_input: Res<ADSInput>,
     mut weapon_query: Query<(&mut ADS, &mut GunAnimation, &Weapon), With<Weapon>>,
     mut camera_query: Query<&mut Projection, (With<Camera>, With<FirstLayerCamera>)>,
     time: Res<Time>,
 ) {
     let mut first_ads_data: Option<(f32, f32, f32)> = None;
 
-    for (mut ads, mut gun_animation, weapon) in weapon_query.iter_mut() {
+    for (mut ads, mut gun_animation, _weapon) in weapon_query.iter_mut() {
         if first_ads_data.is_none() {
             first_ads_data = Some((ads.hip_fov, ads.ads_fov, ads.ads_progress));
         }
@@ -43,7 +43,7 @@ pub fn update_ads(
         gun_animation.wobble.intensity = 0.02 * ads_factor;
     }
 
-    if let Ok(mut projection) = camera_query.single_mut() {
+    if let Ok(projection) = camera_query.single_mut() {
         if let Projection::Perspective(perspective) = projection.into_inner() {
             if let Some((hip_fov, ads_fov, ads_progress)) = first_ads_data {
                 let target_fov = hip_fov.lerp(ads_fov, ads_progress);

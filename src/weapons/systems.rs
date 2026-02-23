@@ -1,7 +1,4 @@
-use bevy::{
-    camera::visibility::RenderLayers, color::palettes::tailwind, ecs::spawn::SpawnRelatedBundle,
-    prelude::*,
-};
+use bevy::{camera::visibility::RenderLayers, color::palettes::tailwind, prelude::*};
 
 use crate::{
     camera::{components::FirstLayerCamera, renderlayers::VIEW_MODEL_RENDER_LAYER},
@@ -14,38 +11,43 @@ use super::{
     components::{Bullet, BulletDirection, BulletTracer, PrimaryWeaponType, Weapon, WeaponType},
 };
 
-pub fn spawn_weapon(
-    asset_server: Res<AssetServer>,
-) -> Spawn<(
-    SceneRoot,
-    Transform,
-    RenderLayers,
-    Weapon,
-    GunAnimation,
-    ADS,
-    SpawnRelatedBundle<ChildOf, Spawn<(Transform, BulletTracer)>>,
-)> {
+pub fn spawn_weapon(commands: &mut Commands, asset_server: &Res<AssetServer>) -> Entity {
     let hip_position = Vec3::new(0.0, 0.05, 0.7);
     let ads_position = Vec3::new(-0.532, 0.3, 0.6);
 
-    Spawn((
-        SceneRoot(asset_server.load("models/ak.glb#Scene0")),
-        Transform::from_xyz(0.0, 0.05, 0.7),
-        RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
-        Weapon::new(
-            "a gun".to_string(),
-            WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
-        ),
-        GunAnimation::default(),
-        ADS::new(hip_position, ads_position),
-        Children::spawn(Spawn((
-            Transform {
-                translation: Vec3::new(0.53, -0.46, -2.15),
-                ..default()
-            },
-            BulletTracer,
-        ))),
-    ))
+    commands
+        .spawn((
+            SceneRoot(asset_server.load("models/ak.glb#Scene0")),
+            Transform::from_xyz(0.0, 0.05, 0.7),
+            RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
+            Weapon::new(
+                "a gun".to_string(),
+                WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
+            ),
+            GunAnimation::default(),
+            ADS::new(hip_position, ads_position),
+        ))
+        .with_children(|parent| {
+            // Bullet tracer as child
+            parent.spawn((
+                Transform {
+                    translation: Vec3::new(0.53, -0.46, -2.15),
+                    ..default()
+                },
+                BulletTracer,
+            ));
+
+            // Scope as child
+            parent.spawn((
+                SceneRoot(asset_server.load("models/redot.glb#Scene0")),
+                Transform {
+                    translation: Vec3::new(0.0, 0.15, 0.2),
+                    ..default()
+                },
+                RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
+            ));
+        })
+        .id()
 }
 
 pub fn spawn_bullets(
@@ -121,11 +123,11 @@ pub fn bullet_movement(
 
 pub fn bullet_hit_enemy(
     mut commands: Commands,
-    bullet_query: Query<(&Bullet, Entity, &Transform), With<Bullet>>,
-    enemy_query: Query<(&Enemy, Entity, &Transform), With<Enemy>>,
+    bullet_query: Query<(Entity, &Transform), With<Bullet>>,
+    enemy_query: Query<(Entity, &Transform), With<Enemy>>,
 ) {
-    for (bullet, bullet_entity, bullet_transform) in bullet_query.iter() {
-        for (enemy, enemy_entity, enemy_transform) in enemy_query.iter() {
+    for (bullet_entity, bullet_transform) in bullet_query.iter() {
+        for (enemy_entity, enemy_transform) in enemy_query.iter() {
             let distance = bullet_transform
                 .translation
                 .distance(enemy_transform.translation);
