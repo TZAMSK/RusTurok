@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::view::RenderLayers};
+use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 use crate::camera::renderlayers::{DEFAULT_RENDER_LAYER, VIEW_MODEL_RENDER_LAYER};
 

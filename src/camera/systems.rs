@@ -1,6 +1,6 @@
 use bevy::ecs::system::Commands;
 
-use bevy::{prelude::*, render::view::RenderLayers};
+use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 use crate::{
     camera::{components::CameraSensitivity, renderlayers::VIEW_MODEL_RENDER_LAYER},

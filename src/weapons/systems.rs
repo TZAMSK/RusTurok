@@ -1,6 +1,6 @@
 use bevy::{
-    color::palettes::tailwind, ecs::spawn::SpawnRelatedBundle, prelude::*,
-    render::view::RenderLayers,
+    camera::visibility::RenderLayers, color::palettes::tailwind, ecs::spawn::SpawnRelatedBundle,
+    prelude::*,
 };
 
 use crate::{
@@ -123,7 +123,6 @@ pub fn bullet_hit_enemy(
     mut commands: Commands,
     bullet_query: Query<(&Bullet, Entity, &Transform), With<Bullet>>,
     enemy_query: Query<(&Enemy, Entity, &Transform), With<Enemy>>,
-    asset_server: Res<AssetServer>,
 ) {
     for (bullet, bullet_entity, bullet_transform) in bullet_query.iter() {
         for (enemy, enemy_entity, enemy_transform) in enemy_query.iter() {

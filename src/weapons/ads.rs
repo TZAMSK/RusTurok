@@ -43,7 +43,7 @@ pub fn update_ads(
         gun_animation.wobble.intensity = 0.02 * ads_factor;
     }
 
-    if let Ok(mut projection) = camera_query.get_single_mut() {
+    if let Ok(mut projection) = camera_query.single_mut() {
         if let Projection::Perspective(perspective) = projection.into_inner() {
             if let Some((hip_fov, ads_fov, ads_progress)) = first_ads_data {
                 let target_fov = hip_fov.lerp(ads_fov, ads_progress);

@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = "0.16.0"
-bevy_dev_tools = "0.16.0"
+bevy = "0.18.0"
+bevy_dev_tools = "0.18.0"
 bevy-inspector-egui = "=0.31.0"
+bevy_text = "0.18.0"
 
 [profile.dev]
 opt-level = 1
