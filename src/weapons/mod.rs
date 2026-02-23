@@ -13,7 +13,7 @@ use animation::update_gun_animation;
 use bullets::despawn_timed_entities;
 use systems::{bullet_movement, spawn_bullets};
 
-pub use animation::GunAnimationState;
+use crate::weapons::systems::bullet_hit_enemy;
 
 pub struct WeaponPlugin;
 
@@ -27,6 +27,7 @@ impl Plugin for WeaponPlugin {
                 spawn_bullets,
                 bullet_movement,
                 update_gun_animation,
+                bullet_hit_enemy,
             )
                 .chain(),
         );

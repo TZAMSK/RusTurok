@@ -28,7 +28,7 @@ fn spawn_main_camera() -> Spawn<(FirstLayerCamera, Camera, Camera3d, Projection)
     Spawn((
         FirstLayerCamera,
         Camera {
-            order: 1,
+            order: 0,
             ..default()
         },
         Camera3d::default(),
@@ -49,7 +49,7 @@ fn spawn_view_model_camera() -> Spawn<(
     Spawn((
         SecondLayerCamera,
         Camera {
-            order: 2,
+            order: 1,
             ..default()
         },
         Camera3d::default(),

@@ -5,6 +5,7 @@ use bevy::{
 
 use crate::{
     camera::{components::FirstLayerCamera, renderlayers::VIEW_MODEL_RENDER_LAYER},
+    enemy::components::Enemy,
     weapons::components::{GunAnimation, ADS},
 };
 
@@ -25,7 +26,7 @@ pub fn spawn_weapon(
     SpawnRelatedBundle<ChildOf, Spawn<(Transform, BulletTracer)>>,
 )> {
     let hip_position = Vec3::new(0.0, 0.05, 0.7);
-    let ads_position = Vec3::new(0.0, 0.08, 0.3);
+    let ads_position = Vec3::new(-0.532, 0.3, 0.6);
 
     Spawn((
         SceneRoot(asset_server.load("models/ak.glb#Scene0")),
@@ -115,5 +116,27 @@ pub fn bullet_movement(
 
     for (mut transform, direction) in bullet_query.iter_mut() {
         transform.translation += direction.0 * weapon.unique_trait.bullet_speed * time.delta_secs();
+    }
+}
+
+pub fn bullet_hit_enemy(
+    mut commands: Commands,
+    bullet_query: Query<(&Bullet, Entity, &Transform), With<Bullet>>,
+    enemy_query: Query<(&Enemy, Entity, &Transform), With<Enemy>>,
+    asset_server: Res<AssetServer>,
+) {
+    for (bullet, bullet_entity, bullet_transform) in bullet_query.iter() {
+        for (enemy, enemy_entity, enemy_transform) in enemy_query.iter() {
+            let distance = bullet_transform
+                .translation
+                .distance(enemy_transform.translation);
+            let bullet_radius = 2.0;
+            let enemy_radius = 2.0;
+
+            if distance < bullet_radius + enemy_radius {
+                commands.entity(bullet_entity).despawn();
+                commands.entity(enemy_entity).despawn();
+            }
+        }
     }
 }

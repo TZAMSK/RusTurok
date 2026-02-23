@@ -1,25 +1,33 @@
-use bevy::{
-    color::palettes::css::SEA_GREEN, prelude::*, render::view::RenderLayers, window::PrimaryWindow,
-};
-
-use crate::camera::renderlayers::CROSSHAIR_RENDER_LAYER;
+use bevy::{color::palettes::css::SEA_GREEN, prelude::*};
 
 use super::components::Crosshair;
 
-pub fn spawn_crosshair(
-    mut commands: Commands,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut material: ResMut<Assets<ColorMaterial>>,
-) {
-    let window = window_query.single().unwrap();
+pub fn spawn_crosshair(mut commands: Commands) {
     let crosshair = Crosshair::new();
 
-    commands.spawn((
-        Mesh2d(meshes.add(Circle::new(crosshair.size / 2.0))),
-        MeshMaterial2d(material.add(ColorMaterial::from_color(SEA_GREEN))),
-        Transform::from_xyz(window.width() / 2.0, window.width() / 2.0, 0.0),
-        Camera2d,
-        RenderLayers::layer(CROSSHAIR_RENDER_LAYER),
-    ));
+    commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: Val::Percent(50.0),
+                top: Val::Percent(50.0),
+                width: Val::Px(crosshair.size),
+                height: Val::Px(crosshair.size),
+                margin: UiRect::axes(
+                    Val::Px(-crosshair.size / 2.0),
+                    Val::Px(-crosshair.size / 2.0),
+                ),
+                ..default()
+            },
+            BackgroundColor(SEA_GREEN.into()),
+            GlobalZIndex(999),
+        ))
+        .with_child((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                ..default()
+            },
+            BackgroundColor(SEA_GREEN.into()),
+        ));
 }
