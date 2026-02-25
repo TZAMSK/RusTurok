@@ -4,6 +4,7 @@ mod bullets;
 pub mod components;
 pub mod systems;
 mod tests;
+mod transition;
 pub mod wobble;
 
 use bevy::prelude::*;

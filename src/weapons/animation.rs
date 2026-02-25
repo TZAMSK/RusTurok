@@ -64,6 +64,8 @@ pub fn update_gun_animation(
             ads,
             ads_factor,
             !player.is_grounded,
+            player.is_sliding,
+            player.is_sprinting,
         );
     }
 }
@@ -168,9 +170,11 @@ fn apply_gun_rotation(
     ads: &ADS,
     ads_factor: f32,
     is_grounded: bool,
+    is_sliding: bool,
+    is_sprinting: bool,
 ) {
     if speed > 0.1 && !ads.is_ads {
-        let mut tilt = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
+        let mut roll = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
         let mut pitch = Quat::from_rotation_x(-movement_dir.z * 0.05 * speed.min(1.0));
 
         if is_grounded {
@@ -180,17 +184,23 @@ fn apply_gun_rotation(
             gun_transform.translation.y -= 0.02 * jump_tilt_factor;
         }
 
-        if speed >= 15.0 {
-            let sprint_pitch = Quat::from_rotation_x(-0.55);
-            let sprint_roll = Quat::from_rotation_y(1.25);
-            tilt = sprint_roll * tilt;
-            pitch = sprint_pitch * pitch;
+        if is_sprinting {
+            roll = Quat::from_rotation_y(1.25) * roll;
+            pitch = Quat::from_rotation_x(-0.55) * pitch;
             gun_transform.translation.x += 0.04;
             gun_transform.translation.y -= 0.19;
             gun_transform.translation.z -= 0.25;
         }
 
-        gun_transform.rotation = camera_transform.rotation * tilt * pitch;
+        if is_sliding {
+            roll = Quat::from_rotation_y(0.0) * roll;
+            pitch = Quat::from_rotation_x(1.15) * pitch;
+            gun_transform.translation.x += 0.16;
+            gun_transform.translation.y -= 0.17;
+            gun_transform.translation.z -= 0.21;
+        }
+
+        gun_transform.rotation = camera_transform.rotation * roll * pitch;
     } else {
         gun_transform.rotation = camera_transform.rotation;
     }

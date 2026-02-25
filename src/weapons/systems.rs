@@ -1,6 +1,6 @@
 use super::{
     bullets::DespawnAfter,
-    components::{Bullet, BulletTracer, Weapon},
+    components::{Bullet, BulletTracer},
 };
 use crate::{camera::components::FirstLayerCamera, enemy::components::Enemy};
 use bevy::{color::palettes::tailwind, prelude::*};
@@ -21,6 +21,7 @@ pub fn spawn_bullets(
     asset_server: Res<AssetServer>,
     time: Res<Time>,
     enemy_query: Query<(Entity, &GlobalTransform), With<Enemy>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
         let Ok(tracer_transform) = weapon_query.single() else {
@@ -30,6 +31,8 @@ pub fn spawn_bullets(
             return;
         };
 
+        let enable_dmg = keyboard.pressed(KeyCode::KeyQ);
+
         let camera_direction = camera_transform.forward().normalize();
         let camera_start = camera_transform.translation();
 
@@ -38,8 +41,10 @@ pub fn spawn_bullets(
         let max_distance = 1000.0;
         let hit = raycast_from_camera(camera_start, camera_direction, max_distance, &enemy_query);
 
-        if let Some(enemy_entity) = hit.entity {
-            commands.entity(enemy_entity).despawn();
+        if enable_dmg {
+            if let Some(enemy_entity) = hit.entity {
+                commands.entity(enemy_entity).despawn();
+            }
         }
 
         let weapon_to_hit = (hit.point - weapon_start).normalize();

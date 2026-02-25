@@ -2,7 +2,11 @@ use std::f32::consts::FRAC_2_PI;
 
 use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
-use crate::{camera::components::CameraSensitivity, player::components::Player};
+use crate::{
+    camera::components::CameraSensitivity,
+    player::components::Player,
+    weapons::components::{Weapon, ADS},
+};
 
 pub fn move_player_camera(
     accumulated_mouse_motion: Res<AccumulatedMouseMotion>,
@@ -29,6 +33,7 @@ pub fn move_player_camera(
 pub fn move_player(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut player_query: Query<(&mut Player, &mut Transform), With<Player>>,
+    mut weapon_query: Query<&mut ADS, With<Weapon>>,
     time: Res<Time>,
 ) {
     if let Ok((mut player, mut player_transform)) = player_query.single_mut() {
@@ -61,22 +66,65 @@ pub fn move_player(
 
         //Sprint
         if keyboard_input.just_pressed(KeyCode::ShiftLeft) {
-            player.is_sprinting = !player.is_sprinting;
-        }
+            player.is_sprinting = true;
+            player.is_crouching = false;
+            player.is_sliding = false;
 
-        if direction == Vec3::ZERO {
-            player.is_sprinting = false;
+            if player.is_sprinting {
+                for mut ads in weapon_query.iter_mut() {
+                    ads.is_ads = false;
+                    ads.ads_progress = 0.0;
+                }
+            }
         }
 
         if player.is_sprinting && direction != Vec3::ZERO {
             speed *= 1.22;
+            for mut ads in weapon_query.iter_mut() {
+                ads.is_ads = false;
+                continue;
+            }
         }
 
-        //Jump
-        if direction.length() > 0.0 {
+        //Slide and crouch
+        if keyboard_input.just_pressed(KeyCode::ControlLeft) {
+            if player.is_sprinting {
+                player.is_sliding = true;
+                player.is_crouching = false;
+
+                player.slide_direction =
+                    Vec3::new(horizontal_forward.x, 0.0, horizontal_forward.z).normalize();
+            } else {
+                player.is_crouching = !player.is_crouching;
+            }
+
+            player.is_sprinting = false;
+        }
+
+        if direction != Vec3::ZERO {
+            if player.is_sliding {
+                speed *= 1.22;
+            }
+
+            if player.is_crouching {
+                speed *= 0.22;
+            }
+        }
+
+        if direction == Vec3::ZERO {
+            player.is_sprinting = false;
+            player.is_sliding = false;
+        }
+
+        if direction.length() > 0.0 && !player.is_sliding {
             player_transform.translation += direction.normalize() * speed * time.delta_secs();
         }
 
+        if player.is_sliding {
+            player_transform.translation += player.slide_direction * speed * time.delta_secs();
+        }
+
+        //Jump
         if keyboard_input.just_pressed(KeyCode::Space) && player.is_grounded {
             player.velocity = player.jump_height;
             player.is_grounded = false;
