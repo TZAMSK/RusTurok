@@ -79,7 +79,7 @@ fn spawn_weapon_as_child(parent: &mut ChildSpawnerCommands, asset_server: &Res<A
         .with_children(|parent| {
             parent.spawn((
                 Transform {
-                    translation: Vec3::new(0.0, 0.0952, 1.440),
+                    translation: Vec3::new(0.0, 0.0952, -1.440),
                     ..default()
                 },
                 BulletTracer,
