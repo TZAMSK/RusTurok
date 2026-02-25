@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use camera::CameraPlugin;
 use crosshair::CrosshairPlugin;
 use player::PlayerPlugin;
-use settings::{exit_game, fps, settings};
+use settings::{exit_game, settings};
 use weapons::animation::GunAnimationState;
 use weapons::{BulletPlugin, WeaponPlugin};
 use world::WorldPlugin;

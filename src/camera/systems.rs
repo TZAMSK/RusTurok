@@ -10,6 +10,18 @@ use crate::{
 
 use super::components::{FirstLayerCamera, SecondLayerCamera};
 
+/*
+pub fn spawn_tool_camera(mut commands: Commands) {
+    commands.spawn((
+        Camera {
+            order: 0,
+            ..default()
+        },
+        Camera3d::default(),
+    ));
+}
+*/
+
 pub fn spawn_camera(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn((
@@ -19,7 +31,6 @@ pub fn spawn_camera(mut commands: Commands, asset_server: Res<AssetServer>) {
             Visibility::default(),
         ))
         .with_children(|parent| {
-            // Spawn main camera
             parent.spawn((
                 FirstLayerCamera,
                 Camera {
@@ -28,12 +39,11 @@ pub fn spawn_camera(mut commands: Commands, asset_server: Res<AssetServer>) {
                 },
                 Camera3d::default(),
                 Projection::Perspective(PerspectiveProjection {
-                    fov: 140.0_f32.to_radians(),
+                    fov: 120.0_f32.to_radians(),
                     ..default()
                 }),
             ));
 
-            // Spawn view model camera
             parent.spawn((
                 SecondLayerCamera,
                 Camera {
@@ -48,19 +58,18 @@ pub fn spawn_camera(mut commands: Commands, asset_server: Res<AssetServer>) {
                 RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
             ));
 
-            // Spawn weapon directly as child
             spawn_weapon_as_child(parent, &asset_server);
         });
 }
 
 fn spawn_weapon_as_child(parent: &mut ChildSpawnerCommands, asset_server: &Res<AssetServer>) {
-    let hip_position = Vec3::new(0.0, 0.05, 0.7);
-    let ads_position = Vec3::new(-0.531, 0.3, 0.6);
+    let hip_position = Vec3::new(0.5, -0.33, 0.0);
+    let ads_position = Vec3::new(0.0, -0.279, 0.0);
 
     parent
         .spawn((
             SceneRoot(asset_server.load("models/ak.glb#Scene0")),
-            Transform::from_xyz(0.0, 0.05, 0.7),
+            Transform::from_xyz(hip_position.x, hip_position.y, hip_position.z),
             RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
             Weapon::new(
                 "a gun".to_string(),
@@ -70,24 +79,12 @@ fn spawn_weapon_as_child(parent: &mut ChildSpawnerCommands, asset_server: &Res<A
             ADS::new(hip_position, ads_position),
         ))
         .with_children(|parent| {
-            // Bullet tracer as child
             parent.spawn((
                 Transform {
-                    translation: Vec3::new(0.53, -0.46, -2.15),
+                    translation: Vec3::new(0.0, 0.0952, 1.440),
                     ..default()
                 },
                 BulletTracer,
-            ));
-
-            // Scope as child
-            parent.spawn((
-                SceneRoot(asset_server.load("models/redot.glb#Scene0")),
-                Transform {
-                    translation: Vec3::new(0.602, -0.53, -1.2),
-                    rotation: Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2),
-                    scale: Vec3::new(0.15, 0.15, 0.15),
-                },
-                RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
             ));
         });
 }

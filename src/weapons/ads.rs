@@ -22,7 +22,6 @@ pub fn update_ads(
     time: Res<Time>,
 ) {
     let mut first_ads_data: Option<(f32, f32, f32)> = None;
-
     for (mut ads, mut gun_animation, _weapon) in weapon_query.iter_mut() {
         if first_ads_data.is_none() {
             first_ads_data = Some((ads.hip_fov, ads.ads_fov, ads.ads_progress));

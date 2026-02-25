@@ -36,7 +36,7 @@ impl ADS {
             ads_speed: 8.0,
             hip_position,
             ads_position,
-            hip_fov: 140.0,
+            hip_fov: 120.0,
             ads_fov: 80.0,
         }
     }
@@ -112,7 +112,7 @@ impl Default for Stats {
 impl Default for WeaponTrait {
     fn default() -> Self {
         Self {
-            bullet_speed: 1000.0,
+            bullet_speed: 10.0,
             mag_size: 20,
             stats: Stats::default(),
             total_bullets: 200,

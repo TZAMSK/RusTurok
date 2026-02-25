@@ -1,6 +1,6 @@
-use bevy::{camera::visibility::RenderLayers, prelude::*};
-
-use crate::camera::renderlayers::{DEFAULT_RENDER_LAYER, VIEW_MODEL_RENDER_LAYER};
+//use bevy::{camera::visibility::RenderLayers, prelude::*};
+use bevy::prelude::*;
+//use crate::camera::renderlayers::VIEW_MODEL_RENDER_LAYER;
 
 pub fn spawn_world_model(
     mut commands: Commands,
@@ -37,6 +37,7 @@ pub fn spawn_world_model(
     }
 }
 
+/*
 pub fn spawn_lights(mut commands: Commands) {
     commands.spawn((
         PointLight {
@@ -44,6 +45,7 @@ pub fn spawn_lights(mut commands: Commands) {
             shadows_enabled: true,
             ..default()
         },
-        RenderLayers::from_layers(&[DEFAULT_RENDER_LAYER, VIEW_MODEL_RENDER_LAYER]),
+        RenderLayers::from_layers(&[VIEW_MODEL_RENDER_LAYER]),
     ));
 }
+*/

@@ -1,8 +1,6 @@
 use super::components::*;
 use bevy::prelude::*;
 
-const NUMBER_ENEMIES: u32 = 19;
-
 pub fn spawn_enemy(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

@@ -1,54 +1,11 @@
-use bevy::{camera::visibility::RenderLayers, color::palettes::tailwind, prelude::*};
+use bevy::{color::palettes::tailwind, prelude::*};
 
-use crate::{
-    camera::{components::FirstLayerCamera, renderlayers::VIEW_MODEL_RENDER_LAYER},
-    enemy::components::Enemy,
-    weapons::components::{GunAnimation, ADS},
-};
+use crate::{camera::components::FirstLayerCamera, enemy::components::Enemy};
 
 use super::{
     bullets::DespawnAfter,
-    components::{Bullet, BulletDirection, BulletTracer, PrimaryWeaponType, Weapon, WeaponType},
+    components::{Bullet, BulletDirection, BulletTracer, Weapon},
 };
-
-pub fn spawn_weapon(commands: &mut Commands, asset_server: &Res<AssetServer>) -> Entity {
-    let hip_position = Vec3::new(0.0, 0.05, 0.7);
-    let ads_position = Vec3::new(-0.532, 0.3, 0.6);
-
-    commands
-        .spawn((
-            SceneRoot(asset_server.load("models/ak.glb#Scene0")),
-            Transform::from_xyz(0.0, 0.05, 0.7),
-            RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
-            Weapon::new(
-                "a gun".to_string(),
-                WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
-            ),
-            GunAnimation::default(),
-            ADS::new(hip_position, ads_position),
-        ))
-        .with_children(|parent| {
-            // Bullet tracer as child
-            parent.spawn((
-                Transform {
-                    translation: Vec3::new(0.53, -0.46, -2.15),
-                    ..default()
-                },
-                BulletTracer,
-            ));
-
-            // Scope as child
-            parent.spawn((
-                SceneRoot(asset_server.load("models/redot.glb#Scene0")),
-                Transform {
-                    translation: Vec3::new(0.0, 0.15, 0.2),
-                    ..default()
-                },
-                RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
-            ));
-        })
-        .id()
-}
 
 pub fn spawn_bullets(
     mut commands: Commands,
@@ -61,7 +18,7 @@ pub fn spawn_bullets(
     time: Res<Time>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
-        let arm = meshes.add(Cuboid::new(0.04, 0.04, 0.1));
+        let arm = meshes.add(Cuboid::new(0.1, 0.1, 0.5));
         let arm_material = materials.add(Color::from(tailwind::YELLOW_500));
 
         let tracer_transform = trace_query.single().unwrap();
@@ -131,8 +88,8 @@ pub fn bullet_hit_enemy(
             let distance = bullet_transform
                 .translation
                 .distance(enemy_transform.translation);
-            let bullet_radius = 2.0;
-            let enemy_radius = 2.0;
+            let bullet_radius = 0.01;
+            let enemy_radius = 0.25;
 
             if distance < bullet_radius + enemy_radius {
                 commands.entity(bullet_entity).despawn();

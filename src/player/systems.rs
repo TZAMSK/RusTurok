@@ -27,11 +27,13 @@ pub fn move_player_camera(
 
 pub fn move_player(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut player_query: Query<(&Player, &mut Transform), With<Player>>,
+    mut player_query: Query<(&mut Player, &mut Transform), With<Player>>,
     time: Res<Time>,
 ) {
     if let Ok((player, mut player_transform)) = player_query.single_mut() {
         let mut direction = Vec3::ZERO;
+
+        let mut speed = player.speed;
 
         let forward = player_transform.forward();
         let right = player_transform.right();
@@ -55,9 +57,12 @@ pub fn move_player(
             direction += horizontal_right;
         }
 
+        if keyboard_input.pressed(KeyCode::ShiftLeft) && direction != Vec3::ZERO {
+            speed *= 1.5;
+        }
+
         if direction.length() > 0.0 {
-            player_transform.translation +=
-                direction.normalize() * player.speed * time.delta_secs();
+            player_transform.translation += direction.normalize() * speed * time.delta_secs();
         }
     }
 }

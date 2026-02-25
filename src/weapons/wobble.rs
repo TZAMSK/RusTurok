@@ -4,10 +4,8 @@ use bevy::prelude::*;
 pub struct GunWobble {
     pub base_offset: Vec3,
     pub current_offset: Vec3,
-    pub speed: f32,
     pub intensity: f32,
     pub smoothness: f32,
-    pub last_velocity: f32,
     pub time: f32,
 }
 
@@ -16,10 +14,8 @@ impl Default for GunWobble {
         Self {
             base_offset: Vec3::new(0.0, 0.05, 0.7),
             current_offset: Vec3::ZERO,
-            speed: 8.0,
             intensity: 0.02,
             smoothness: 0.1,
-            last_velocity: 0.0,
             time: 0.0,
         }
     }

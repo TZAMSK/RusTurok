@@ -1,8 +1,8 @@
 use bevy::{
     prelude::*,
-    window::{CursorGrabMode, CursorOptions, PresentMode, PrimaryWindow, WindowMode, WindowPlugin},
+    window::{CursorOptions, PresentMode, WindowMode, WindowPlugin},
 };
-use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
+//use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
 
 pub fn settings() -> WindowPlugin {
     WindowPlugin {
@@ -19,6 +19,7 @@ pub fn settings() -> WindowPlugin {
     }
 }
 
+/*
 pub fn fps() -> FpsOverlayPlugin {
     FpsOverlayPlugin {
         config: FpsOverlayConfig {
@@ -30,6 +31,7 @@ pub fn fps() -> FpsOverlayPlugin {
         },
     }
 }
+*/
 
 pub fn exit_game(keyboard: Res<ButtonInput<KeyCode>>, mut exit_writer: MessageWriter<AppExit>) {
     if keyboard.just_pressed(KeyCode::Escape) {

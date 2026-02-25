@@ -3,7 +3,7 @@ mod systems;
 
 use bevy::prelude::*;
 
-use systems::{spawn_lights, spawn_world_model};
+use systems::spawn_world_model;
 
 pub struct WorldPlugin;
 
