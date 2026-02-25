@@ -1,7 +1,6 @@
+use super::components::{GunAnimation, Weapon, ADS};
 use crate::{camera::components::FirstLayerCamera, player::components::Player};
 use bevy::prelude::*;
-
-use super::components::{GunAnimation, Weapon, ADS};
 
 #[derive(Resource)]
 pub struct GunAnimationState {
@@ -20,7 +19,7 @@ impl Default for GunAnimationState {
 
 pub fn update_gun_animation(
     mut animation_state: ResMut<GunAnimationState>,
-    player_query: Query<&Transform, With<Player>>,
+    player_query: Query<(&Player, &Transform), With<Player>>,
     mut gun_query: Query<(&mut Transform, &mut GunAnimation, &mut Weapon, &ADS), Without<Player>>,
     camera_query: Query<
         &Transform,
@@ -33,37 +32,39 @@ pub fn update_gun_animation(
     >,
     time: Res<Time>,
 ) {
-    let Ok(player_transform) = player_query.single() else {
+    let Ok((player, player_transform)) = player_query.single() else {
         return;
     };
-
     let Ok(camera_transform) = camera_query.single() else {
         return;
     };
 
     update_velocity(&mut animation_state, player_transform, &time);
+
     let speed = animation_state.velocity.length();
     let movement_dir = animation_state.velocity.normalize_or_zero();
 
     for (mut gun_transform, mut animation, _weapon, ads) in gun_query.iter_mut() {
         update_animation_timers(&mut animation, &time);
-        let ads_factor = calculate_ads_factor(ads, 0.99);
 
-        let target_offset =
-            calculate_target_offset(&animation, &movement_dir, speed, ads, ads_factor);
-        smooth_offset(&mut animation, target_offset);
+        let ads_factor = calculate_ads_factor(ads, 0.99);
+        let target_offset = calculate_target_offset(&animation, speed, player, ads);
+
+        if player.is_grounded == true {
+            smooth_offset(&mut animation, target_offset);
+        }
 
         apply_idle_animation(&mut animation, speed, ads);
-        apply_gun_transform(&mut gun_transform, &camera_transform, &animation);
+        apply_gun_transform(&mut gun_transform, &animation);
         apply_gun_rotation(
             &mut gun_transform,
             &camera_transform,
             &movement_dir,
             speed,
             ads,
+            ads_factor,
+            !player.is_grounded,
         );
-
-        //apply_gun_running(&mut gun_transform, &camera_transform, &movement_dir, speed);
     }
 }
 
@@ -73,6 +74,7 @@ fn update_velocity(
     time: &Time,
 ) {
     let current_position = player_transform.translation;
+
     if state.last_player_position != Vec3::ZERO {
         state.velocity = (current_position - state.last_player_position) / time.delta_secs();
     }
@@ -94,17 +96,12 @@ fn calculate_ads_factor(ads: &ADS, effect: f32) -> f32 {
 
 fn calculate_target_offset(
     animation: &GunAnimation,
-    movement_dir: &Vec3,
     speed: f32,
+    player: &Player,
     ads: &ADS,
-    ads_factor: f32,
 ) -> Vec3 {
-    if ads.is_ads {
-        return Vec3::ZERO;
-    }
-
-    if speed > 0.1 && speed < 30.0 {
-        calculate_movement_offset(animation, movement_dir, speed, ads_factor)
+    if speed > 0.1 {
+        calculate_movement_offset(animation, speed, player, ads)
     } else {
         Vec3::ZERO
     }
@@ -112,19 +109,28 @@ fn calculate_target_offset(
 
 fn calculate_movement_offset(
     animation: &GunAnimation,
-    movement_dir: &Vec3,
     speed: f32,
-    ads_factor: f32,
+    player: &Player,
+    ads: &ADS,
 ) -> Vec3 {
-    let sideways =
-        movement_dir.cross(Vec3::Y).x * animation.wobble.intensity * speed * 0.5 * ads_factor;
+    let phase = animation.bob.phase;
+    let mut up = 0.0;
+    let mut sideways = 0.0;
 
-    let up_down =
-        animation.bob.phase.sin() * animation.bob.bob_intensity * speed * 0.5 * ads_factor;
+    if player.is_sprinting {
+        up = phase.sin().abs() * animation.bob.bob_intensity * speed;
+        sideways = phase.sin() * animation.wobble.intensity * speed;
+    } else if ads.is_ads {
+        let ads_factor = 0.3;
+        up = phase.sin().abs() * animation.bob.bob_intensity * speed * ads_factor * 0.5;
+        sideways = phase.sin() * animation.wobble.intensity * speed * ads_factor * 0.3;
+    } else {
+        let movement_factor = 0.1;
+        up = phase.sin().abs() * animation.bob.bob_intensity * speed * movement_factor;
+        sideways = phase.sin() * animation.wobble.intensity * speed * movement_factor;
+    }
 
-    let forward = movement_dir.z * animation.wobble.intensity * speed * 0.3 * ads_factor;
-
-    Vec3::new(sideways, up_down, forward)
+    Vec3::new(sideways, up, 0.0)
 }
 
 fn smooth_offset(animation: &mut GunAnimation, target_offset: Vec3) {
@@ -137,7 +143,7 @@ fn smooth_offset(animation: &mut GunAnimation, target_offset: Vec3) {
 fn apply_idle_animation(animation: &mut GunAnimation, speed: f32, ads: &ADS) {
     if speed < 0.1 || ads.is_ads {
         let idle_offset = calculate_idle_offset(animation);
-        animation.wobble.current_offset = animation.wobble.current_offset.lerp(idle_offset, 0.05);
+        animation.wobble.current_offset = animation.wobble.current_offset.lerp(idle_offset, 0.15);
     }
 }
 
@@ -149,14 +155,9 @@ fn calculate_idle_offset(animation: &GunAnimation) -> Vec3 {
     )
 }
 
-fn apply_gun_transform(
-    gun_transform: &mut Mut<Transform>,
-    camera_transform: &Transform,
-    animation: &GunAnimation,
-) {
+fn apply_gun_transform(gun_transform: &mut Mut<Transform>, animation: &GunAnimation) {
     let final_offset = animation.wobble.base_offset + animation.wobble.current_offset;
-    gun_transform.translation =
-        camera_transform.translation + (camera_transform.rotation * final_offset);
+    gun_transform.translation = final_offset;
 }
 
 fn apply_gun_rotation(
@@ -165,29 +166,32 @@ fn apply_gun_rotation(
     movement_dir: &Vec3,
     speed: f32,
     ads: &ADS,
+    ads_factor: f32,
+    is_grounded: bool,
 ) {
-    if speed > 0.1 && !ads.is_ads && speed < 30.0 {
-        let tilt = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
-        let pitch = Quat::from_rotation_x(-movement_dir.z * 0.05 * speed.min(1.0));
-        gun_transform.rotation = camera_transform.rotation * tilt * pitch;
-    } else {
-        gun_transform.rotation = camera_transform.rotation;
-    }
-}
+    if speed > 0.1 && !ads.is_ads {
+        let mut tilt = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
+        let mut pitch = Quat::from_rotation_x(-movement_dir.z * 0.05 * speed.min(1.0));
 
-/*
-fn apply_gun_running(
-    gun_transform: &mut Mut<Transform>,
-    camera_transform: &Transform,
-    movement_dir: &Vec3,
-    speed: f32,
-) {
-    if speed > 30.0 {
-        let tilt = Quat::from_rotation_z(movement_dir.x * 3.0 * speed.min(1.0));
-        let pitch = Quat::from_rotation_x(-movement_dir.z * 5.0 * speed.min(1.0));
+        if is_grounded {
+            let jump_tilt_factor = if ads.is_ads { ads_factor * 0.3 } else { 1.0 };
+            let jump_pitch = Quat::from_rotation_x(-0.2 * jump_tilt_factor);
+            pitch = jump_pitch * pitch;
+            gun_transform.translation.y -= 0.02 * jump_tilt_factor;
+        }
+
+        if speed >= 15.0 {
+            let sprint_pitch = Quat::from_rotation_x(-0.55);
+            let sprint_roll = Quat::from_rotation_y(1.25);
+            tilt = sprint_roll * tilt;
+            pitch = sprint_pitch * pitch;
+            gun_transform.translation.x += 0.04;
+            gun_transform.translation.y -= 0.19;
+            gun_transform.translation.z -= 0.25;
+        }
+
         gun_transform.rotation = camera_transform.rotation * tilt * pitch;
     } else {
         gun_transform.rotation = camera_transform.rotation;
     }
 }
-*/

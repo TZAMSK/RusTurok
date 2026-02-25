@@ -1,14 +1,12 @@
-use bevy::ecs::system::Commands;
-use bevy::{camera::visibility::RenderLayers, prelude::*};
-
+use super::components::{FirstLayerCamera, SecondLayerCamera};
 use crate::{
     camera::{components::CameraSensitivity, renderlayers::VIEW_MODEL_RENDER_LAYER},
     player::components::Player,
     weapons::components::BulletTracer,
     weapons::components::{GunAnimation, PrimaryWeaponType, Weapon, WeaponType, ADS},
 };
-
-use super::components::{FirstLayerCamera, SecondLayerCamera};
+use bevy::ecs::system::Commands;
+use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 /*
 pub fn spawn_tool_camera(mut commands: Commands) {
@@ -27,7 +25,7 @@ pub fn spawn_camera(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn((
             Player::new(),
             CameraSensitivity::default(),
-            Transform::from_xyz(0.0, 1.0, 0.0),
+            Transform::from_xyz(0.0, 1.93, 0.0),
             Visibility::default(),
         ))
         .with_children(|parent| {
@@ -63,8 +61,8 @@ pub fn spawn_camera(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn spawn_weapon_as_child(parent: &mut ChildSpawnerCommands, asset_server: &Res<AssetServer>) {
-    let hip_position = Vec3::new(0.5, -0.33, 0.0);
-    let ads_position = Vec3::new(0.0, -0.279, 0.0);
+    let hip_position = Vec3::new(0.26, -0.35, 0.0);
+    let ads_position = Vec3::new(0.0, -0.279, 0.094);
 
     parent
         .spawn((
