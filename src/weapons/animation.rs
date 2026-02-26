@@ -1,5 +1,9 @@
 use super::components::{GunAnimation, Weapon, ADS};
-use crate::{camera::components::FirstLayerCamera, player::components::Player};
+use crate::{
+    camera::components::FirstLayerCamera,
+    player::components::Player,
+    weapons::transition::{WeaponAnimationStance, WeaponAnimationState},
+};
 use bevy::prelude::*;
 
 #[derive(Resource)]
@@ -20,7 +24,16 @@ impl Default for GunAnimationState {
 pub fn update_gun_animation(
     mut animation_state: ResMut<GunAnimationState>,
     player_query: Query<(&Player, &Transform), With<Player>>,
-    mut gun_query: Query<(&mut Transform, &mut GunAnimation, &mut Weapon, &ADS), Without<Player>>,
+    mut gun_query: Query<
+        (
+            &mut Transform,
+            &mut GunAnimation,
+            &mut Weapon,
+            &ADS,
+            &mut WeaponAnimationState,
+        ),
+        Without<Player>,
+    >,
     camera_query: Query<
         &Transform,
         (
@@ -44,7 +57,9 @@ pub fn update_gun_animation(
     let speed = animation_state.velocity.length();
     let movement_dir = animation_state.velocity.normalize_or_zero();
 
-    for (mut gun_transform, mut animation, _weapon, ads) in gun_query.iter_mut() {
+    for (mut gun_transform, mut animation, _weapon, ads, mut weapon_animation_state) in
+        gun_query.iter_mut()
+    {
         update_animation_timers(&mut animation, &time);
 
         let ads_factor = calculate_ads_factor(ads, 0.99);
@@ -55,9 +70,12 @@ pub fn update_gun_animation(
         }
 
         apply_idle_animation(&mut animation, speed, ads);
-        apply_gun_transform(&mut gun_transform, &animation);
+        if weapon_animation_state.animation_progress >= 1.0 {
+            apply_gun_transform(&mut gun_transform, &animation);
+        }
         apply_gun_rotation(
             &mut gun_transform,
+            &mut weapon_animation_state,
             &camera_transform,
             &movement_dir,
             speed,
@@ -164,6 +182,7 @@ fn apply_gun_transform(gun_transform: &mut Mut<Transform>, animation: &GunAnimat
 
 fn apply_gun_rotation(
     gun_transform: &mut Mut<Transform>,
+    weapon_animation_state: &mut WeaponAnimationState,
     camera_transform: &Transform,
     movement_dir: &Vec3,
     speed: f32,
@@ -173,6 +192,11 @@ fn apply_gun_rotation(
     is_sliding: bool,
     is_sprinting: bool,
 ) {
+    if weapon_animation_state.animation_progress < 1.0 {
+        gun_transform.rotation = camera_transform.rotation * gun_transform.rotation;
+        return;
+    }
+
     if speed > 0.1 && !ads.is_ads {
         let mut roll = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
         let mut pitch = Quat::from_rotation_x(-movement_dir.z * 0.05 * speed.min(1.0));
@@ -185,23 +209,49 @@ fn apply_gun_rotation(
         }
 
         if is_sprinting {
-            roll = Quat::from_rotation_y(1.25) * roll;
-            pitch = Quat::from_rotation_x(-0.55) * pitch;
-            gun_transform.translation.x += 0.04;
-            gun_transform.translation.y -= 0.19;
-            gun_transform.translation.z -= 0.25;
+            let current_translation = gun_transform.translation;
+            let current_rotation = gun_transform.rotation.to_euler(EulerRot::YXZ);
+            let current_rotation_vec =
+                Vec3::new(current_rotation.1, current_rotation.0, current_rotation.2);
+            weapon_animation_state.change_state_by_stance(
+                WeaponAnimationStance::Sprinting,
+                current_translation,
+                current_rotation_vec,
+            );
+        } else if is_sliding {
+            let current_translation = gun_transform.translation;
+            let current_rotation = gun_transform.rotation.to_euler(EulerRot::YXZ);
+            let current_rotation_vec =
+                Vec3::new(current_rotation.1, current_rotation.0, current_rotation.2);
+            weapon_animation_state.change_state_by_stance(
+                WeaponAnimationStance::Sliding,
+                current_translation,
+                current_rotation_vec,
+            );
         }
 
-        if is_sliding {
-            roll = Quat::from_rotation_y(0.0) * roll;
-            pitch = Quat::from_rotation_x(1.15) * pitch;
-            gun_transform.translation.x += 0.16;
-            gun_transform.translation.y -= 0.17;
-            gun_transform.translation.z -= 0.21;
+        if is_sliding || is_sprinting {
+            pitch = Quat::from_rotation_x(weapon_animation_state.rotation.x) * pitch;
+            roll = Quat::from_rotation_y(weapon_animation_state.rotation.y) * roll;
+            gun_transform.translation += weapon_animation_state.translation;
         }
 
         gun_transform.rotation = camera_transform.rotation * roll * pitch;
     } else {
+        if !matches!(
+            weapon_animation_state.stance,
+            WeaponAnimationStance::Grounded
+        ) {
+            let current_translation = gun_transform.translation;
+            let current_rotation = gun_transform.rotation.to_euler(EulerRot::YXZ);
+            let current_rotation_vec =
+                Vec3::new(current_rotation.1, current_rotation.0, current_rotation.2);
+            weapon_animation_state.change_state_by_stance(
+                WeaponAnimationStance::Grounded,
+                current_translation,
+                current_rotation_vec,
+            );
+        }
         gun_transform.rotation = camera_transform.rotation;
     }
 }

@@ -2,8 +2,10 @@ use super::components::{FirstLayerCamera, SecondLayerCamera};
 use crate::{
     camera::{components::CameraSensitivity, renderlayers::VIEW_MODEL_RENDER_LAYER},
     player::components::Player,
-    weapons::components::BulletTracer,
-    weapons::components::{GunAnimation, PrimaryWeaponType, Weapon, WeaponType, ADS},
+    weapons::{
+        components::{BulletTracer, GunAnimation, PrimaryWeaponType, Weapon, WeaponType, ADS},
+        transition::{WeaponAnimationStance, WeaponAnimationState},
+    },
 };
 use bevy::ecs::system::Commands;
 use bevy::{camera::visibility::RenderLayers, prelude::*};
@@ -61,20 +63,27 @@ pub fn spawn_camera(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn spawn_weapon_as_child(parent: &mut ChildSpawnerCommands, asset_server: &Res<AssetServer>) {
-    let hip_position = Vec3::new(0.26, -0.35, 0.0);
+    let initial_weapon_state =
+        WeaponAnimationState::define_state_by_stance(WeaponAnimationStance::Grounded);
+
     let ads_position = Vec3::new(0.0, -0.279, 0.094);
 
     parent
         .spawn((
             SceneRoot(asset_server.load("models/ak.glb#Scene0")),
-            Transform::from_xyz(hip_position.x, hip_position.y, hip_position.z),
+            Transform::from_xyz(
+                initial_weapon_state.translation.x,
+                initial_weapon_state.translation.y,
+                initial_weapon_state.translation.z,
+            ),
             RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
             Weapon::new(
                 "a gun".to_string(),
                 WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
             ),
             GunAnimation::default(),
-            ADS::new(hip_position, ads_position),
+            initial_weapon_state,
+            ADS::new(initial_weapon_state.translation, ads_position),
         ))
         .with_children(|parent| {
             parent.spawn((
