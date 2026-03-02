@@ -11,8 +11,8 @@ pub fn spawn_enemy(
     const GOLDEN_ANGLE: f32 = 137.507_77;
 
     let mut hsla = Hsla::hsl(0.0, 1.0, 0.5);
-    for x in -1..2 {
-        for z in -1..2 {
+    for x in -1..5 {
+        for z in -1..5 {
             commands.spawn((
                 Mesh3d(cube.clone()),
                 MeshMaterial3d(materials.add(Color::from(hsla))),

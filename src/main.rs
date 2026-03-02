@@ -3,6 +3,7 @@ mod crosshair;
 pub mod enemy;
 mod player;
 mod settings;
+mod ui;
 mod weapons;
 mod world;
 
@@ -17,6 +18,7 @@ use weapons::{BulletPlugin, WeaponPlugin};
 use world::WorldPlugin;
 
 use crate::enemy::EnemyPlugin;
+use crate::ui::UIPlugin;
 
 fn main() {
     App::new()
@@ -29,6 +31,7 @@ fn main() {
         .add_plugins(PlayerPlugin)
         .add_plugins(WeaponPlugin)
         .add_plugins(BulletPlugin)
+        .add_plugins(UIPlugin)
         .add_systems(Update, exit_game)
         .init_resource::<GunAnimationState>()
         .run();

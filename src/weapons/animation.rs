@@ -65,14 +65,12 @@ pub fn update_gun_animation(
         let ads_factor = calculate_ads_factor(ads, 0.99);
         let target_offset = calculate_target_offset(&animation, speed, player, ads);
 
-        if player.is_grounded == true {
+        if player.movement.is_grounded == true {
             smooth_offset(&mut animation, target_offset);
         }
 
         apply_idle_animation(&mut animation, speed, ads);
-        if weapon_animation_state.animation_progress >= 1.0 {
-            apply_gun_transform(&mut gun_transform, &animation);
-        }
+        apply_gun_transform(&mut gun_transform, &animation);
         apply_gun_rotation(
             &mut gun_transform,
             &mut weapon_animation_state,
@@ -81,9 +79,9 @@ pub fn update_gun_animation(
             speed,
             ads,
             ads_factor,
-            !player.is_grounded,
-            player.is_sliding,
-            player.is_sprinting,
+            !player.movement.is_grounded,
+            player.movement.is_sliding,
+            player.movement.is_sprinting,
         );
     }
 }
@@ -137,7 +135,7 @@ fn calculate_movement_offset(
     let mut up = 0.0;
     let mut sideways = 0.0;
 
-    if player.is_sprinting {
+    if player.movement.is_sprinting {
         up = phase.sin().abs() * animation.bob.bob_intensity * speed;
         sideways = phase.sin() * animation.wobble.intensity * speed;
     } else if ads.is_ads {
@@ -192,22 +190,9 @@ fn apply_gun_rotation(
     is_sliding: bool,
     is_sprinting: bool,
 ) {
-    if weapon_animation_state.animation_progress < 1.0 {
-        gun_transform.rotation = camera_transform.rotation * gun_transform.rotation;
-        return;
-    }
+    let in_transition = weapon_animation_state.animation_progress < 1.0;
 
     if speed > 0.1 && !ads.is_ads {
-        let mut roll = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
-        let mut pitch = Quat::from_rotation_x(-movement_dir.z * 0.05 * speed.min(1.0));
-
-        if is_grounded {
-            let jump_tilt_factor = if ads.is_ads { ads_factor * 0.3 } else { 1.0 };
-            let jump_pitch = Quat::from_rotation_x(-0.2 * jump_tilt_factor);
-            pitch = jump_pitch * pitch;
-            gun_transform.translation.y -= 0.02 * jump_tilt_factor;
-        }
-
         if is_sprinting {
             let current_translation = gun_transform.translation;
             let current_rotation = gun_transform.rotation.to_euler(EulerRot::YXZ);
@@ -230,13 +215,21 @@ fn apply_gun_rotation(
             );
         }
 
-        if is_sliding || is_sprinting {
-            pitch = Quat::from_rotation_x(weapon_animation_state.rotation.x) * pitch;
-            roll = Quat::from_rotation_y(weapon_animation_state.rotation.y) * roll;
-            gun_transform.translation += weapon_animation_state.translation;
-        }
+        if !in_transition && !is_sliding && !is_sprinting {
+            let mut roll = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
+            let mut pitch = Quat::from_rotation_x(-movement_dir.z * 0.05 * speed.min(1.0));
 
-        gun_transform.rotation = camera_transform.rotation * roll * pitch;
+            if !is_grounded {
+                let jump_tilt_factor = if ads.is_ads { ads_factor * 0.3 } else { 1.0 };
+                let jump_pitch = Quat::from_rotation_x(-0.2 * jump_tilt_factor);
+                pitch = jump_pitch * pitch;
+                gun_transform.translation.y -= 0.02 * jump_tilt_factor;
+            }
+
+            gun_transform.rotation = camera_transform.rotation * roll * pitch;
+        } else if !in_transition {
+            gun_transform.rotation = camera_transform.rotation * gun_transform.rotation;
+        }
     } else {
         if !matches!(
             weapon_animation_state.stance,
@@ -252,6 +245,8 @@ fn apply_gun_rotation(
                 current_rotation_vec,
             );
         }
-        gun_transform.rotation = camera_transform.rotation;
+        if !in_transition {
+            gun_transform.rotation = camera_transform.rotation;
+        }
     }
 }

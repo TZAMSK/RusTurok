@@ -39,7 +39,7 @@ pub fn move_player(
     if let Ok((mut player, mut player_transform)) = player_query.single_mut() {
         let mut direction = Vec3::ZERO;
         let gravity = -9.81;
-        let mut speed = player.speed;
+        let mut speed = player.movement.speed;
 
         let forward = player_transform.forward();
         let right = player_transform.right();
@@ -66,11 +66,11 @@ pub fn move_player(
 
         //Sprint
         if keyboard_input.just_pressed(KeyCode::ShiftLeft) {
-            player.is_sprinting = true;
-            player.is_crouching = false;
-            player.is_sliding = false;
+            player.movement.is_sprinting = true;
+            player.movement.is_crouching = false;
+            player.movement.is_sliding = false;
 
-            if player.is_sprinting {
+            if player.movement.is_sprinting {
                 for mut ads in weapon_query.iter_mut() {
                     ads.is_ads = false;
                     ads.ads_progress = 0.0;
@@ -78,7 +78,7 @@ pub fn move_player(
             }
         }
 
-        if player.is_sprinting && direction != Vec3::ZERO {
+        if player.movement.is_sprinting && direction != Vec3::ZERO {
             speed *= 1.22;
             for mut ads in weapon_query.iter_mut() {
                 ads.is_ads = false;
@@ -88,56 +88,58 @@ pub fn move_player(
 
         //Slide and crouch
         if keyboard_input.just_pressed(KeyCode::ControlLeft) {
-            if player.is_sprinting {
-                player.is_sliding = true;
-                player.is_crouching = false;
+            if player.movement.is_sprinting {
+                player.movement.is_sliding = true;
+                player.movement.is_crouching = false;
 
-                player.slide_direction =
+                player.movement.slide_direction =
                     Vec3::new(horizontal_forward.x, 0.0, horizontal_forward.z).normalize();
             } else {
-                player.is_crouching = !player.is_crouching;
+                player.movement.is_crouching = !player.movement.is_crouching;
             }
 
-            player.is_sprinting = false;
+            player.movement.is_sprinting = false;
         }
 
         if direction != Vec3::ZERO {
-            if player.is_sliding {
+            if player.movement.is_sliding {
                 speed *= 1.22;
             }
 
-            if player.is_crouching {
+            if player.movement.is_crouching {
                 speed *= 0.22;
             }
         }
 
         if direction == Vec3::ZERO {
-            player.is_sprinting = false;
-            player.is_sliding = false;
+            player.movement.is_sprinting = false;
+            player.movement.is_sliding = false;
         }
 
-        if direction.length() > 0.0 && !player.is_sliding {
+        if direction.length() > 0.0 && !player.movement.is_sliding {
             player_transform.translation += direction.normalize() * speed * time.delta_secs();
         }
 
-        if player.is_sliding {
-            player_transform.translation += player.slide_direction * speed * time.delta_secs();
+        if player.movement.is_sliding {
+            player_transform.translation +=
+                player.movement.slide_direction * speed * time.delta_secs();
         }
 
         //Jump
-        if keyboard_input.just_pressed(KeyCode::Space) && player.is_grounded {
-            player.velocity = player.jump_height;
-            player.is_grounded = false;
+        if keyboard_input.just_pressed(KeyCode::Space) && player.movement.is_grounded {
+            player.movement.velocity = player.movement.jump_height;
+            player.movement.is_grounded = false;
+            player.movement.is_sliding = false;
         }
 
-        if !player.is_grounded {
-            player.velocity += gravity * time.delta_secs();
-            player_transform.translation.y += player.velocity * time.delta_secs();
+        if !player.movement.is_grounded {
+            player.movement.velocity += gravity * time.delta_secs();
+            player_transform.translation.y += player.movement.velocity * time.delta_secs();
 
             if player_transform.translation.y <= 0.0 {
                 player_transform.translation.y = 0.0;
-                player.velocity = 0.0;
-                player.is_grounded = true;
+                player.movement.velocity = 0.0;
+                player.movement.is_grounded = true;
             }
         }
     }
@@ -147,10 +149,10 @@ pub fn ground_detection_system(mut player_query: Query<(&mut Player, &Transform)
     for (mut player, transform) in player_query.iter_mut() {
         let ground_level = 0.0;
 
-        if transform.translation.y <= ground_level + 0.1 && player.velocity <= 0.0 {
-            player.is_grounded = true;
+        if transform.translation.y <= ground_level + 0.1 && player.movement.velocity <= 0.0 {
+            player.movement.is_grounded = true;
         } else {
-            player.is_grounded = false;
+            player.movement.is_grounded = false;
         }
     }
 }
