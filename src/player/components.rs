@@ -24,7 +24,7 @@ pub struct Movement {
     pub is_sprinting: bool,
     pub is_sliding: bool,
     pub is_crouching: bool,
-    pub slide_distance: f32,
+    pub slide_time: f32,
     pub slide_direction: Vec3,
 }
 
@@ -46,7 +46,7 @@ impl Player {
                 is_sprinting: false,
                 is_sliding: false,
                 is_crouching: false,
-                slide_distance: 5.0,
+                slide_time: 0.7,
                 slide_direction: Vec3::new(0.0, 0.0, 0.0),
             },
         }

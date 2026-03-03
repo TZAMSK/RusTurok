@@ -9,10 +9,10 @@ pub fn xp_bar_spawn(mut commands: Commands) {
     commands
         .spawn(Node {
             width: Val::Percent(40.0),
-            height: Val::Px(10.0),
+            height: Val::Percent(2.0),
             position_type: PositionType::Absolute,
             left: Val::Percent(30.0),
-            bottom: Val::Px(10.0),
+            bottom: Val::Percent(1.0),
             ..default()
         })
         .with_children(|parent| {

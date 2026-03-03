@@ -7,6 +7,6 @@ pub struct Enemy {
 
 impl Enemy {
     pub fn new() -> Self {
-        Self { health: 1.0 }
+        Self { health: 50.0 }
     }
 }

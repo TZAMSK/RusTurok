@@ -70,7 +70,7 @@ fn spawn_weapon_as_child(parent: &mut ChildSpawnerCommands, asset_server: &Res<A
 
     parent
         .spawn((
-            SceneRoot(asset_server.load("models/ak.glb#Scene0")),
+            SceneRoot(asset_server.load("models/safeak2/ak6.glb#Scene0")),
             Transform::from_xyz(
                 initial_weapon_state.translation.x,
                 initial_weapon_state.translation.y,
@@ -84,6 +84,7 @@ fn spawn_weapon_as_child(parent: &mut ChildSpawnerCommands, asset_server: &Res<A
             GunAnimation::default(),
             initial_weapon_state,
             ADS::new(initial_weapon_state.translation, ads_position),
+            AnimationPlayer::default(),
         ))
         .with_children(|parent| {
             parent.spawn((

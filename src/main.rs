@@ -1,4 +1,5 @@
 mod camera;
+mod combat;
 mod crosshair;
 pub mod enemy;
 mod player;

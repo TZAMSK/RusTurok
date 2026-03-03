@@ -3,7 +3,8 @@ use super::{
     components::{Bullet, BulletTracer},
 };
 use crate::{
-    camera::components::FirstLayerCamera, enemy::components::Enemy, player::components::Player,
+    camera::components::FirstLayerCamera, combat::DamageMessage, enemy::components::Enemy,
+    player::components::Player, weapons::components::Weapon,
 };
 use bevy::{color::palettes::tailwind, prelude::*};
 
@@ -16,74 +17,86 @@ struct RaycastHit {
 pub fn spawn_bullets(
     mut commands: Commands,
     mouse_input: Res<ButtonInput<MouseButton>>,
-    mut player_query: Query<&mut Player>,
-    weapon_query: Query<&GlobalTransform, With<BulletTracer>>,
+    player_query: Query<(Entity, &Player)>,
+    bullet_tracer_query: Query<&GlobalTransform, With<BulletTracer>>,
+    mut weapon_query: Query<(&mut Weapon, &GlobalTransform)>,
     camera_query: Query<&GlobalTransform, (With<Camera>, With<FirstLayerCamera>)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
     time: Res<Time>,
     enemy_query: Query<(Entity, &GlobalTransform), With<Enemy>>,
-    keyboard: Res<ButtonInput<KeyCode>>,
+    mut damage_events: MessageWriter<DamageMessage>,
 ) {
-    if let Ok(mut player) = player_query.single_mut() {
-        if mouse_input.just_pressed(MouseButton::Left) {
-            let Ok(tracer_transform) = weapon_query.single() else {
-                return;
-            };
-            let Ok(camera_transform) = camera_query.single() else {
-                return;
-            };
+    let Ok((player_entity, player)) = player_query.single() else {
+        return;
+    };
 
-            let enable_dmg = keyboard.pressed(KeyCode::KeyQ);
+    let Ok((mut weapon, _weapon_transform)) = weapon_query.single_mut() else {
+        return;
+    };
 
-            let camera_direction = camera_transform.forward().normalize();
-            let camera_start = camera_transform.translation();
+    weapon.fire_cooldown = (weapon.fire_cooldown - time.delta_secs()).max(0.0);
 
-            let weapon_start = tracer_transform.translation();
+    if mouse_input.pressed(MouseButton::Left)
+        && weapon.fire_cooldown <= 0.0
+        && weapon.unique_trait.current_magazine_bullets > 0
+    {
+        let Ok(tracer_transform) = bullet_tracer_query.single() else {
+            return;
+        };
+        let Ok(camera_transform) = camera_query.single() else {
+            return;
+        };
 
-            let max_distance = 1000.0;
-            let hit =
-                raycast_from_camera(camera_start, camera_direction, max_distance, &enemy_query);
+        let camera_direction = camera_transform.forward().normalize();
+        let camera_start = camera_transform.translation();
+        let weapon_start = tracer_transform.translation();
 
-            if enable_dmg {
-                if let Some(enemy_entity) = hit.entity {
-                    commands.entity(enemy_entity).despawn();
-                    player.add_xp(10.0);
-                }
-            }
+        let max_distance = 1000.0;
+        let hit = raycast_from_camera(camera_start, camera_direction, max_distance, &enemy_query);
 
-            let weapon_to_hit = (hit.point - weapon_start).normalize();
-
-            spawn_visual_tracer(
-                &mut commands,
-                &mut meshes,
-                &mut materials,
-                weapon_start,
-                weapon_to_hit,
-                hit.point,
-                &time,
-            );
-
-            spawn_muzzle_flash(
-                &mut commands,
-                &mut meshes,
-                &mut materials,
-                &asset_server,
-                weapon_start,
-                camera_direction,
-                &time,
-            );
-
-            spawn_impact_effect(
-                &mut commands,
-                &mut meshes,
-                &mut materials,
-                hit.point,
-                hit.entity.is_some(),
-                &time,
-            );
+        if let Some(enemy_entity) = hit.entity {
+            damage_events.write(DamageMessage {
+                target: enemy_entity,
+                amount: 10.0,
+                shooter: Some(player_entity),
+            });
         }
+
+        weapon.unique_trait.current_magazine_bullets -= 1;
+        weapon.fire_cooldown = weapon.unique_trait.stats.seconds_per_shot;
+
+        let weapon_to_hit = (hit.point - weapon_start).normalize();
+
+        spawn_visual_tracer(
+            &mut commands,
+            &mut meshes,
+            &mut materials,
+            weapon_start,
+            weapon_to_hit,
+            hit.point,
+            &time,
+        );
+
+        spawn_muzzle_flash(
+            &mut commands,
+            &mut meshes,
+            &mut materials,
+            &asset_server,
+            weapon_start,
+            camera_direction,
+            &time,
+        );
+
+        spawn_impact_effect(
+            &mut commands,
+            &mut meshes,
+            &mut materials,
+            hit.point,
+            hit.entity.is_some(),
+            &time,
+        );
     }
 }
 

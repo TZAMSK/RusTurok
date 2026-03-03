@@ -1,4 +1,6 @@
 use super::components::*;
+use crate::combat::DamageMessage;
+use crate::player::components::Player;
 use bevy::prelude::*;
 
 pub fn spawn_enemy(
@@ -20,6 +22,31 @@ pub fn spawn_enemy(
                 Enemy::new(),
             ));
             hsla = hsla.rotate_hue(GOLDEN_ANGLE);
+        }
+    }
+}
+
+pub fn apply_damage_to_enemies(
+    mut commands: Commands,
+    mut damage_events: MessageReader<DamageMessage>,
+    mut enemy_query: Query<&mut Enemy>,
+    mut player_query: Query<&mut Player>,
+) {
+    for event in damage_events.read() {
+        let Ok(mut enemy) = enemy_query.get_mut(event.target) else {
+            continue;
+        };
+
+        enemy.health -= event.amount;
+
+        if enemy.health <= 0.0 {
+            commands.entity(event.target).despawn();
+
+            if let Some(shooter) = event.shooter {
+                if let Ok(mut player) = player_query.get_mut(shooter) {
+                    player.add_xp(10.0);
+                }
+            }
         }
     }
 }

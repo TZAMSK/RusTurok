@@ -1,4 +1,7 @@
-use bevy::{ecs::component::Component, math::Vec3};
+use bevy::{
+    ecs::component::Component,
+    math::{Vec2, Vec3},
+};
 
 pub use super::wobble::{GunBob, GunWobble};
 
@@ -55,15 +58,19 @@ pub struct Bullet;
 pub struct Weapon {
     pub name: String,
     pub unique_trait: WeaponTrait,
+    pub fire_cooldown: f32,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct WeaponTrait {
     pub bullet_speed: f32,
     pub mag_size: u32,
+    pub current_magazine_bullets: u32,
+    pub current_reserve_bullets: u32,
     pub stats: Stats,
     pub total_bullets: u32,
     pub weapon_type: WeaponType,
+    pub recoil_pattern: Vec<Vec2>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -72,7 +79,7 @@ pub struct Stats {
     pub stability: f32,
     pub handling: f32,
     pub reload: f32,
-    pub round_per_minute: f32,
+    pub seconds_per_shot: f32,
     pub aim_assist: f32,
     pub zoom: f32,
 }
@@ -103,7 +110,7 @@ impl Default for Stats {
             stability: 40.0,
             handling: 40.0,
             reload: 30.0,
-            round_per_minute: 210.0,
+            seconds_per_shot: 20.0 / 210.0,
             aim_assist: 10.0,
             zoom: 14.0,
         }
@@ -114,9 +121,12 @@ impl Default for WeaponTrait {
         Self {
             bullet_speed: 1000.0,
             mag_size: 20,
+            current_magazine_bullets: 20,
+            current_reserve_bullets: 200,
             stats: Stats::default(),
             total_bullets: 200,
             weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::Sidearm),
+            recoil_pattern: vec![Vec2::new(0.0, 1.0), Vec2::new(1.0, 1.0)],
         }
     }
 }
@@ -126,6 +136,7 @@ impl Weapon {
         Self {
             name,
             unique_trait: WeaponTrait::define_stats_by_type(weapon_type),
+            fire_cooldown: 0.0,
         }
     }
 }
@@ -152,13 +163,13 @@ impl WeaponTrait {
 
     fn auto_rifle() -> Self {
         Self {
-            mag_size: 32,
+            mag_size: 20,
             stats: Stats {
                 range: 20.0,
                 stability: 50.0,
                 handling: 50.0,
                 reload: 45.0,
-                round_per_minute: 600.0,
+                seconds_per_shot: 60.0 / 600.0,
                 aim_assist: 10.0,
                 zoom: 14.0,
             },

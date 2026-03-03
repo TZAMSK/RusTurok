@@ -69,12 +69,23 @@ pub fn move_player(
             player.movement.is_sprinting = true;
             player.movement.is_crouching = false;
             player.movement.is_sliding = false;
+            player.movement.slide_time = 0.7;
 
             if player.movement.is_sprinting {
                 for mut ads in weapon_query.iter_mut() {
                     ads.is_ads = false;
                     ads.ads_progress = 0.0;
                 }
+            }
+        }
+
+        if player.movement.is_sliding {
+            if player.movement.slide_time > 0.0 {
+                player.movement.slide_time -= time.delta_secs();
+                player.movement.is_sliding = true;
+            } else {
+                player.movement.is_sliding = false;
+                player.movement.slide_time = 0.7;
             }
         }
 
@@ -103,7 +114,7 @@ pub fn move_player(
 
         if direction != Vec3::ZERO {
             if player.movement.is_sliding {
-                speed *= 1.22;
+                speed *= 1.3;
             }
 
             if player.movement.is_crouching {
