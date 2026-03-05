@@ -1,6 +1,6 @@
 pub mod components;
 pub mod renderlayers;
-mod systems;
+pub mod systems;
 
 use bevy::prelude::*;
 
@@ -11,6 +11,5 @@ pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera);
-        //.add_systems(Startup, spawn_tool_camera);
     }
 }

@@ -3,10 +3,17 @@ use super::{
     components::{Bullet, BulletTracer},
 };
 use crate::{
-    camera::components::FirstLayerCamera, combat::DamageMessage, enemy::components::Enemy,
-    player::components::Player, weapons::components::Weapon,
+    camera::{components::FirstLayerCamera, renderlayers::VIEW_MODEL_RENDER_LAYER},
+    combat::DamageMessage,
+    enemy::components::Enemy,
+    player::components::Player,
+    weapons::{
+        components::{GunAnimation, PrimaryWeaponType, Weapon, WeaponType, ADS},
+        ressources::input::WeaponInput,
+        transition::{WeaponAnimationStance, WeaponAnimationState},
+    },
 };
-use bevy::{color::palettes::tailwind, prelude::*};
+use bevy::{camera::visibility::RenderLayers, color::palettes::tailwind, prelude::*};
 
 struct RaycastHit {
     point: Vec3,
@@ -14,9 +21,54 @@ struct RaycastHit {
     distance: f32,
 }
 
-pub fn spawn_bullets(
+pub fn spawn_weapon(
     mut commands: Commands,
-    mouse_input: Res<ButtonInput<MouseButton>>,
+    asset_server: Res<AssetServer>,
+    player_query: Query<Entity, With<Player>>,
+) {
+    let Ok(player_entity) = player_query.single() else {
+        return;
+    };
+
+    let initial_weapon_state =
+        WeaponAnimationState::define_state_by_stance(WeaponAnimationStance::Grounded);
+
+    let ads_position = Vec3::new(0.0, -0.279, 0.094);
+
+    let weapon_entity = commands
+        .spawn((
+            SceneRoot(asset_server.load("models/safeak2/ak6.glb#Scene0")),
+            Transform::from_xyz(
+                initial_weapon_state.translation.x,
+                initial_weapon_state.translation.y,
+                initial_weapon_state.translation.z,
+            ),
+            RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
+            Weapon::new(
+                "a gun".to_string(),
+                WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
+            ),
+            GunAnimation::default(),
+            initial_weapon_state,
+            ADS::new(initial_weapon_state.translation, ads_position),
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Transform {
+                    translation: Vec3::new(0.0, 0.0952, -1.440),
+                    ..default()
+                },
+                BulletTracer,
+            ));
+        })
+        .id();
+
+    commands.entity(player_entity).add_child(weapon_entity);
+}
+
+pub fn spawn_bullets(
+    weapon_input: Res<WeaponInput>,
+    mut commands: Commands,
     player_query: Query<(Entity, &Player)>,
     bullet_tracer_query: Query<&GlobalTransform, With<BulletTracer>>,
     mut weapon_query: Query<(&mut Weapon, &GlobalTransform)>,
@@ -38,7 +90,7 @@ pub fn spawn_bullets(
 
     weapon.fire_cooldown = (weapon.fire_cooldown - time.delta_secs()).max(0.0);
 
-    if mouse_input.pressed(MouseButton::Left)
+    if weapon_input.shoot_pressed
         && weapon.fire_cooldown <= 0.0
         && weapon.unique_trait.current_magazine_bullets > 0
     {
@@ -54,7 +106,14 @@ pub fn spawn_bullets(
         let weapon_start = tracer_transform.translation();
 
         let max_distance = 1000.0;
-        let hit = raycast_from_camera(camera_start, camera_direction, max_distance, &enemy_query);
+
+        let adjusted_direction = apply_aim_assist(
+            camera_start,
+            camera_direction,
+            &enemy_query,
+            weapon.cone_fogiveness(),
+        );
+        let hit = raycast_from_camera(camera_start, adjusted_direction, max_distance, &enemy_query);
 
         if let Some(enemy_entity) = hit.entity {
             damage_events.write(DamageMessage {
@@ -97,6 +156,37 @@ pub fn spawn_bullets(
             hit.entity.is_some(),
             &time,
         );
+    }
+}
+
+fn apply_aim_assist(
+    start: Vec3,
+    original_direction: Vec3,
+    enemy_query: &Query<(Entity, &GlobalTransform), With<Enemy>>,
+    cone_forgiveness: (f32, f32),
+) -> Vec3 {
+    let mut best_target: Option<(Vec3, f32)> = None;
+    let (cone, bend) = cone_forgiveness;
+
+    for (_, transform) in enemy_query.iter() {
+        let enemy_pos = transform.translation();
+        let to_enemy = (enemy_pos - start).normalize();
+
+        let angle = original_direction.angle_between(to_enemy);
+
+        if angle < cone {
+            let distance = start.distance(enemy_pos);
+
+            if best_target.is_none() || distance < best_target.unwrap().1 {
+                best_target = Some((to_enemy, distance));
+            }
+        }
+    }
+
+    if let Some((target_dir, _)) = best_target {
+        original_direction.lerp(target_dir, bend).normalize()
+    } else {
+        original_direction
     }
 }
 

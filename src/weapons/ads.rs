@@ -3,30 +3,16 @@ use bevy::prelude::*;
 use super::components::{GunAnimation, Weapon, ADS};
 use crate::camera::components::FirstLayerCamera;
 use crate::player::components::Player;
-
-#[derive(Resource, Default)]
-pub struct ADSInput {
-    pub ads_pressed: bool,
-    pub should_cancel_sprint: bool,
-}
-
-pub fn handle_ads_input(
-    mut ads_input: ResMut<ADSInput>,
-    mouse_button: Res<ButtonInput<MouseButton>>,
-) {
-    let was_ads = ads_input.ads_pressed;
-    ads_input.ads_pressed = mouse_button.pressed(MouseButton::Right);
-    ads_input.should_cancel_sprint = !was_ads && ads_input.ads_pressed;
-}
+use crate::weapons::ressources::input::WeaponInput;
 
 pub fn update_ads(
-    ads_input: Res<ADSInput>,
+    weapon_input: Res<WeaponInput>,
     mut weapon_query: Query<(&mut ADS, &mut GunAnimation, &Weapon), With<Weapon>>,
     mut camera_query: Query<&mut Projection, (With<Camera>, With<FirstLayerCamera>)>,
     mut player_query: Query<&mut Player>,
     time: Res<Time>,
 ) {
-    if ads_input.should_cancel_sprint {
+    if weapon_input.should_cancel_sprint {
         if let Ok(mut player) = player_query.single_mut() {
             player.movement.is_sprinting = false;
         }
@@ -38,7 +24,7 @@ pub fn update_ads(
             first_ads_data = Some((ads.hip_fov, ads.ads_fov, ads.ads_progress));
         }
 
-        ads.is_ads = ads_input.ads_pressed;
+        ads.is_ads = weapon_input.ads_pressed;
 
         let target_progress = if ads.is_ads { 1.0 } else { 0.0 };
         ads.ads_progress +=

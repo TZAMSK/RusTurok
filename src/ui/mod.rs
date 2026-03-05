@@ -17,10 +17,7 @@ impl Plugin for UIPlugin {
             .add_systems(Startup, bullet_indicator_spawn)
             .add_systems(Update, dmg_indicator_spawn)
             .add_systems(Update, update_xp_bar)
-            .add_systems(Update, update_level_indicator)
-            .add_systems(Update, update_xp_required)
-            .add_systems(Update, update_given_xp)
-            .add_systems(Update, update_bullet_indicator)
+            .add_systems(Update, update_weapon_info_indicator)
             .add_systems(Update, update_dmg_indicator);
     }
 }

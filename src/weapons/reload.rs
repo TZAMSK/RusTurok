@@ -4,10 +4,10 @@ use crate::weapons::components::Weapon;
 
 pub fn reload_weapon(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut weapon_query: Query<(&mut Weapon, &mut AnimationPlayer)>,
+    mut weapon_query: Query<&mut Weapon>,
     time: Res<Time>,
 ) {
-    let Ok((mut weapon, mut player)) = weapon_query.single_mut() else {
+    let Ok(mut weapon) = weapon_query.single_mut() else {
         return;
     };
 

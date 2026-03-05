@@ -117,57 +117,52 @@ pub fn xp_bar_spawn(mut commands: Commands) {
 pub fn update_xp_bar(
     mut player_query: Query<&mut Player>,
     mut bar_query: Query<&mut Node, With<XPBarFill>>,
-) {
-    if let Ok(player) = player_query.single_mut() {
-        if let Ok(mut style) = bar_query.single_mut() {
-            let progress = player.xp_progress() * 100.0;
-            style.width = Val::Percent(progress);
-        }
-    }
-}
-
-pub fn update_level_indicator(
-    player_query: Query<&Player>,
     mut level_indicator_query: Query<&mut Text, With<LevelIndicator>>,
-) {
-    if let Ok(player) = player_query.single() {
-        if let Ok(mut level_indicator) = level_indicator_query.single_mut() {
-            **level_indicator = player.level_info.level.to_string();
-        }
-    }
-}
-
-pub fn update_xp_required(
-    player_query: Query<&Player>,
-    mut xp_required_indicator_query: Query<&mut Text, With<XPRequiredIndicator>>,
-) {
-    if let Ok(player) = player_query.single() {
-        if let Ok(mut xp_required_indicator) = xp_required_indicator_query.single_mut() {
-            **xp_required_indicator = format!(
-                "{}/{}",
-                player.level_info.xp.to_string(),
-                player.level_info.xp_required_next_level.to_string(),
-            );
-        }
-    }
-}
-
-pub fn update_given_xp(
-    mut player_query: Query<&mut Player>,
-    mut given_xp_indicator_query: Query<&mut Text, With<GivenXPIndicator>>,
+    mut xp_required_indicator_query: Query<
+        &mut Text,
+        (
+            With<XPRequiredIndicator>,
+            Without<LevelIndicator>,
+            Without<GivenXPIndicator>,
+        ),
+    >,
+    mut given_xp_indicator_query: Query<
+        &mut Text,
+        (
+            With<GivenXPIndicator>,
+            Without<LevelIndicator>,
+            Without<XPRequiredIndicator>,
+        ),
+    >,
     time: Res<Time>,
 ) {
-    if let Ok(mut player) = player_query.single_mut() {
-        if let Ok(mut given_xp_indicator) = given_xp_indicator_query.single_mut() {
-            if player.level_info.xp_timer > 0.0 {
-                player.level_info.xp_timer -= time.delta_secs();
-                **given_xp_indicator = format!("+{}", player.level_info.given_xp.to_string());
-            }
+    let Ok(mut player) = player_query.single_mut() else {
+        return;
+    };
 
-            if player.level_info.xp_timer < 0.0 || player.level_info.given_xp == 0.0 {
-                player.level_info.given_xp = 0.0;
-                **given_xp_indicator = format!("");
-            }
+    if let Ok(mut style) = bar_query.single_mut() {
+        style.width = Val::Percent(player.xp_progress() * 100.0);
+    }
+
+    if let Ok(mut level_indicator) = level_indicator_query.single_mut() {
+        **level_indicator = player.level_info.level.to_string();
+    }
+
+    if let Ok(mut xp_required_indicator) = xp_required_indicator_query.single_mut() {
+        **xp_required_indicator = format!(
+            "{}/{}",
+            player.level_info.xp, player.level_info.xp_required_next_level,
+        );
+    }
+
+    if let Ok(mut given_xp_indicator) = given_xp_indicator_query.single_mut() {
+        if player.level_info.xp_timer > 0.0 {
+            player.level_info.xp_timer -= time.delta_secs();
+            **given_xp_indicator = format!("+{}", player.level_info.given_xp);
+        }
+        if player.level_info.xp_timer < 0.0 || player.level_info.given_xp == 0.0 {
+            player.level_info.given_xp = 0.0;
+            **given_xp_indicator = String::new();
         }
     }
 }

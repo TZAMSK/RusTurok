@@ -8,8 +8,10 @@ mod ui;
 mod weapons;
 mod world;
 
+use bevy::asset::load_internal_binary_asset;
 use bevy::prelude::*;
 
+use bevy::text::TextPlugin;
 use camera::CameraPlugin;
 use crosshair::CrosshairPlugin;
 use player::PlayerPlugin;
@@ -22,8 +24,9 @@ use crate::enemy::EnemyPlugin;
 use crate::ui::UIPlugin;
 
 fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins.set(settings()))
+    let mut app = App::new();
+
+    app.add_plugins(DefaultPlugins.set(settings()))
         //.add_plugins(fps())
         .add_plugins(CrosshairPlugin)
         .add_plugins(WorldPlugin)
@@ -34,6 +37,14 @@ fn main() {
         .add_plugins(BulletPlugin)
         .add_plugins(UIPlugin)
         .add_systems(Update, exit_game)
-        .init_resource::<GunAnimationState>()
-        .run();
+        .init_resource::<GunAnimationState>();
+
+    load_internal_binary_asset!(
+        app,
+        TextFont::default().font,
+        "../assets/fonts/Font.ttf",
+        |bytes: &[u8], _path: String| { Font::try_from_bytes(bytes.to_vec()).unwrap() }
+    );
+
+    app.run();
 }

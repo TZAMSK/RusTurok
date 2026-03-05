@@ -11,6 +11,6 @@ pub struct SecondLayerCamera;
 
 impl Default for CameraSensitivity {
     fn default() -> Self {
-        Self(Vec2::new(0.001, 0.001))
+        Self(Vec2::new(0.00043, 0.00043))
     }
 }

@@ -3,6 +3,8 @@ use bevy::{
     math::{Vec2, Vec3},
 };
 
+use crate::weapons::recoil::{auto_rifle_patterns::ak47_spray_pattern, components::Recoil};
+
 pub use super::wobble::{GunBob, GunWobble};
 
 #[derive(Component)]
@@ -70,7 +72,7 @@ pub struct WeaponTrait {
     pub stats: Stats,
     pub total_bullets: u32,
     pub weapon_type: WeaponType,
-    pub recoil_pattern: Vec<Vec2>,
+    pub recoil: Recoil,
 }
 
 #[derive(Debug, PartialEq)]
@@ -82,6 +84,9 @@ pub struct Stats {
     pub seconds_per_shot: f32,
     pub aim_assist: f32,
     pub zoom: f32,
+    pub level: u32,
+    pub kills: u32,
+    pub kills_next_level: u32,
 }
 
 #[derive(Debug, PartialEq)]
@@ -111,11 +116,31 @@ impl Default for Stats {
             handling: 40.0,
             reload: 30.0,
             seconds_per_shot: 20.0 / 210.0,
-            aim_assist: 10.0,
+            aim_assist: 20.0,
             zoom: 14.0,
+            level: 1,
+            kills: 0,
+            kills_next_level: 10,
         }
     }
 }
+
+impl Stats {
+    pub fn add_kill(&mut self) {
+        self.kills += 1;
+
+        if self.kills >= self.kills_next_level {
+            self.kills = 0;
+            self.level += 1;
+            self.kills_next_level = ((self.kills_next_level as f32) * 1.2) as u32;
+        }
+    }
+
+    pub fn level_progress(&self) -> f32 {
+        self.kills as f32 / self.kills_next_level as f32
+    }
+}
+
 impl Default for WeaponTrait {
     fn default() -> Self {
         Self {
@@ -126,7 +151,12 @@ impl Default for WeaponTrait {
             stats: Stats::default(),
             total_bullets: 200,
             weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::Sidearm),
-            recoil_pattern: vec![Vec2::new(0.0, 1.0), Vec2::new(1.0, 1.0)],
+            recoil: Recoil {
+                pattern: ak47_spray_pattern(),
+                current_bullet_index: 1,
+                recoil_reset_time: 0.5,
+                time_since_last_shot: 0.0,
+            },
         }
     }
 }
@@ -138,6 +168,13 @@ impl Weapon {
             unique_trait: WeaponTrait::define_stats_by_type(weapon_type),
             fire_cooldown: 0.0,
         }
+    }
+
+    pub fn cone_fogiveness(&self) -> (f32, f32) {
+        let aim_assist = self.unique_trait.stats.aim_assist;
+        let cone = (aim_assist * 0.02).to_radians();
+        let bend = (aim_assist / 100.0) * 1.2;
+        (cone, bend)
     }
 }
 
@@ -170,11 +207,20 @@ impl WeaponTrait {
                 handling: 50.0,
                 reload: 45.0,
                 seconds_per_shot: 60.0 / 600.0,
-                aim_assist: 10.0,
+                aim_assist: 81.0,
                 zoom: 14.0,
+                level: 1,
+                kills: 0,
+                kills_next_level: 10,
             },
             total_bullets: 400,
             weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
+            recoil: Recoil {
+                pattern: ak47_spray_pattern(),
+                current_bullet_index: 1,
+                recoil_reset_time: 0.5,
+                time_since_last_shot: 0.0,
+            },
             ..Self::default()
         }
     }
