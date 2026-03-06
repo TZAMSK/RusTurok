@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 #[derive(Debug, Component, Deref, DerefMut)]
-pub struct CameraSensitivity(Vec2);
+pub struct CameraSensitivity(pub Vec2);
 
 #[derive(Debug, Component)]
 pub struct FirstLayerCamera;

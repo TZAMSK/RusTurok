@@ -1,8 +1,18 @@
 use crate::{
     camera::components::FirstLayerCamera, combat::DamageMessage, enemy::components::Enemy,
-    ui::components::DMGIndicator, weapons::bullets::DespawnAfter,
+    weapons::bullets::DespawnAfter,
 };
 use bevy::prelude::*;
+
+#[derive(Component)]
+pub struct DMGIndicator {
+    pub enemy: Entity,
+    pub animation_progress: f32,
+    pub animation_complete: bool,
+    pub animation_speed: f32,
+    pub base_offset: Vec2,
+    pub drift_right: bool,
+}
 
 pub fn dmg_indicator_spawn(
     mut commands: Commands,

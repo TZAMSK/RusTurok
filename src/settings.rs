@@ -1,4 +1,5 @@
 use bevy::{
+    audio::AudioPlugin,
     prelude::*,
     window::{CursorOptions, PresentMode, WindowMode, WindowPlugin},
 };

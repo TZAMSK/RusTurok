@@ -67,7 +67,7 @@ pub fn spawn_weapon(
 }
 
 pub fn spawn_bullets(
-    weapon_input: Res<WeaponInput>,
+    mut weapon_input: ResMut<WeaponInput>,
     mut commands: Commands,
     player_query: Query<(Entity, &Player)>,
     bullet_tracer_query: Query<&GlobalTransform, With<BulletTracer>>,
@@ -89,6 +89,10 @@ pub fn spawn_bullets(
     };
 
     weapon.fire_cooldown = (weapon.fire_cooldown - time.delta_secs()).max(0.0);
+
+    if weapon.fire_cooldown != 0.0 {
+        weapon_input.shoot_pressed = false
+    }
 
     if weapon_input.shoot_pressed
         && weapon.fire_cooldown <= 0.0
@@ -124,7 +128,7 @@ pub fn spawn_bullets(
         }
 
         weapon.unique_trait.current_magazine_bullets -= 1;
-        weapon.fire_cooldown = weapon.unique_trait.stats.seconds_per_shot;
+        weapon.fire_cooldown = 60.0 / weapon.unique_trait.stats.seconds_per_shot;
 
         let weapon_to_hit = (hit.point - weapon_start).normalize();
 

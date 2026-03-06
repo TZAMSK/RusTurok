@@ -1,3 +1,4 @@
+mod audio;
 mod camera;
 mod combat;
 mod crosshair;
@@ -9,6 +10,7 @@ mod weapons;
 mod world;
 
 use bevy::asset::load_internal_binary_asset;
+use bevy::audio::AudioPlugin;
 use bevy::prelude::*;
 
 use bevy::text::TextPlugin;
@@ -20,7 +22,10 @@ use weapons::animation::GunAnimationState;
 use weapons::{BulletPlugin, WeaponPlugin};
 use world::WorldPlugin;
 
+use crate::audio::GameVolumePlugin;
+use crate::combat::CombatPlugin;
 use crate::enemy::EnemyPlugin;
+//use crate::settings::fps;
 use crate::ui::UIPlugin;
 
 fn main() {
@@ -34,6 +39,8 @@ fn main() {
         .add_plugins(CameraPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(WeaponPlugin)
+        .add_plugins(GameVolumePlugin)
+        .add_plugins(CombatPlugin)
         .add_plugins(BulletPlugin)
         .add_plugins(UIPlugin)
         .add_systems(Update, exit_game)

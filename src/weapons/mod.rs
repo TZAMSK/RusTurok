@@ -2,7 +2,7 @@ mod ads;
 pub mod animation;
 pub mod bullets;
 pub mod components;
-mod recoil;
+pub mod recoil;
 pub mod reload;
 pub mod ressources;
 pub mod systems;

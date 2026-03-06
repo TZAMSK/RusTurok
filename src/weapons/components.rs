@@ -3,7 +3,9 @@ use bevy::{
     math::{Vec2, Vec3},
 };
 
-use crate::weapons::recoil::{auto_rifle_patterns::ak47_spray_pattern, components::Recoil};
+use crate::weapons::recoil::{
+    apply_stability, auto_rifle_patterns::ak47_spray_pattern, components::Recoil,
+};
 
 pub use super::wobble::{GunBob, GunWobble};
 
@@ -78,7 +80,7 @@ pub struct WeaponTrait {
 #[derive(Debug, PartialEq)]
 pub struct Stats {
     pub range: f32,
-    pub stability: f32,
+    pub stability: u32,
     pub handling: f32,
     pub reload: f32,
     pub seconds_per_shot: f32,
@@ -112,7 +114,7 @@ impl Default for Stats {
     fn default() -> Self {
         Self {
             range: 40.0,
-            stability: 40.0,
+            stability: 40,
             handling: 40.0,
             reload: 30.0,
             seconds_per_shot: 20.0 / 210.0,
@@ -152,6 +154,7 @@ impl Default for WeaponTrait {
             total_bullets: 200,
             weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::Sidearm),
             recoil: Recoil {
+                base_pattern: ak47_spray_pattern(),
                 pattern: ak47_spray_pattern(),
                 current_bullet_index: 1,
                 recoil_reset_time: 0.5,
@@ -173,7 +176,7 @@ impl Weapon {
     pub fn cone_fogiveness(&self) -> (f32, f32) {
         let aim_assist = self.unique_trait.stats.aim_assist;
         let cone = (aim_assist * 0.02).to_radians();
-        let bend = (aim_assist / 100.0) * 1.2;
+        let bend = (aim_assist / 100.0) * 0.2;
         (cone, bend)
     }
 }
@@ -199,14 +202,17 @@ impl WeaponTrait {
     }
 
     fn auto_rifle() -> Self {
+        let stability = 50;
         Self {
-            mag_size: 20,
+            mag_size: 80,
+            current_magazine_bullets: 80,
+            current_reserve_bullets: 600,
             stats: Stats {
                 range: 20.0,
-                stability: 50.0,
+                stability,
                 handling: 50.0,
                 reload: 45.0,
-                seconds_per_shot: 60.0 / 600.0,
+                seconds_per_shot: 600.0,
                 aim_assist: 81.0,
                 zoom: 14.0,
                 level: 1,
@@ -216,11 +222,13 @@ impl WeaponTrait {
             total_bullets: 400,
             weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
             recoil: Recoil {
-                pattern: ak47_spray_pattern(),
+                base_pattern: ak47_spray_pattern(),
+                pattern: apply_stability(&ak47_spray_pattern(), stability),
                 current_bullet_index: 1,
                 recoil_reset_time: 0.5,
                 time_since_last_shot: 0.0,
             },
+
             ..Self::default()
         }
     }

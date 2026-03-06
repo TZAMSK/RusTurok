@@ -39,7 +39,7 @@ impl Player {
                 xp_timer: 2.0,
             },
             movement: Movement {
-                speed: 10.0,
+                speed: 7.0,
                 jump_height: 7.0,
                 is_grounded: true,
                 velocity: 0.0,
