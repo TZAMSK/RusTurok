@@ -3,6 +3,7 @@ use super::{
     components::{Bullet, BulletTracer},
 };
 use crate::{
+    animations::systems::{play_weapon_animation, AnimationPlayerLinked},
     camera::{components::FirstLayerCamera, renderlayers::VIEW_MODEL_RENDER_LAYER},
     combat::DamageMessage,
     enemy::components::Enemy,
@@ -13,7 +14,10 @@ use crate::{
         transition::{WeaponAnimationStance, WeaponAnimationState},
     },
 };
-use bevy::{camera::visibility::RenderLayers, color::palettes::tailwind, prelude::*};
+use bevy::{
+    camera::visibility::RenderLayers, color::palettes::tailwind, platform::collections::HashMap,
+    prelude::*,
+};
 
 struct RaycastHit {
     point: Vec3,
@@ -25,6 +29,7 @@ pub fn spawn_weapon(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     player_query: Query<Entity, With<Player>>,
+    mut graphs: ResMut<Assets<AnimationGraph>>,
 ) {
     let Ok(player_entity) = player_query.single() else {
         return;
@@ -35,9 +40,18 @@ pub fn spawn_weapon(
 
     let ads_position = Vec3::new(0.0, -0.279, 0.094);
 
+    let shooting_clip: Handle<AnimationClip> = asset_server.load("models/safe/ak47.glb#Animation0");
+    let reloading_clip: Handle<AnimationClip> =
+        asset_server.load("models/safe/ak47.glb#Animation0");
+
+    let mut graph = AnimationGraph::new();
+    let shooting_node = graph.add_clip(shooting_clip, 1.0, graph.root);
+    let reloading_node = graph.add_clip(reloading_clip, 1.0, graph.root);
+    let graph_handle = graphs.add(graph);
+
     let weapon_entity = commands
         .spawn((
-            SceneRoot(asset_server.load("models/safeak2/ak6.glb#Scene0")),
+            SceneRoot(asset_server.load("models/safe/ak47.glb#Scene0")),
             Transform::from_xyz(
                 initial_weapon_state.translation.x,
                 initial_weapon_state.translation.y,
@@ -47,6 +61,9 @@ pub fn spawn_weapon(
             Weapon::new(
                 "a gun".to_string(),
                 WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
+                graph_handle,
+                shooting_node,
+                reloading_node,
             ),
             GunAnimation::default(),
             initial_weapon_state,
@@ -71,11 +88,13 @@ pub fn spawn_bullets(
     mut commands: Commands,
     player_query: Query<(Entity, &Player)>,
     bullet_tracer_query: Query<&GlobalTransform, With<BulletTracer>>,
-    mut weapon_query: Query<(&mut Weapon, &GlobalTransform)>,
+    mut weapon_query: Query<(&mut Weapon, &Children)>,
     camera_query: Query<&GlobalTransform, (With<Camera>, With<FirstLayerCamera>)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
+    children_query: Query<&Children>,
+    mut anim_players: Query<&mut AnimationPlayer, With<AnimationPlayerLinked>>,
     time: Res<Time>,
     enemy_query: Query<(Entity, &GlobalTransform), With<Enemy>>,
     mut damage_events: MessageWriter<DamageMessage>,
@@ -84,7 +103,7 @@ pub fn spawn_bullets(
         return;
     };
 
-    let Ok((mut weapon, _weapon_transform)) = weapon_query.single_mut() else {
+    let Ok((mut weapon, children)) = weapon_query.single_mut() else {
         return;
     };
 
@@ -104,6 +123,14 @@ pub fn spawn_bullets(
         let Ok(camera_transform) = camera_query.single() else {
             return;
         };
+
+        play_weapon_animation(
+            "Shooting",
+            &weapon,
+            children,
+            &children_query,
+            &mut anim_players,
+        );
 
         let camera_direction = camera_transform.forward().normalize();
         let camera_start = camera_transform.translation();

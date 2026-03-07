@@ -35,7 +35,7 @@ fn change_volume(
 
     if let Some(sfx_hitmark) = sfx_hitmark_sound {
         if let Ok(mut sink) = sinks.get_mut(sfx_hitmark.0) {
-            sink.set_volume(Volume::Linear(0.1 * 0.73));
+            sink.set_volume(Volume::Linear(0.1 * 0.55));
         }
     }
 }

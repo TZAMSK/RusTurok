@@ -1,7 +1,4 @@
-use bevy::{
-    ecs::component::Component,
-    math::{Vec2, Vec3},
-};
+use bevy::prelude::*;
 
 use crate::weapons::recoil::{
     apply_stability, auto_rifle_patterns::ak47_spray_pattern, components::Recoil,
@@ -63,6 +60,7 @@ pub struct Weapon {
     pub name: String,
     pub unique_trait: WeaponTrait,
     pub fire_cooldown: f32,
+    pub animation: WeaponAnimations,
 }
 
 #[derive(Debug, PartialEq)]
@@ -75,6 +73,13 @@ pub struct WeaponTrait {
     pub total_bullets: u32,
     pub weapon_type: WeaponType,
     pub recoil: Recoil,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct WeaponAnimations {
+    pub graph: Handle<AnimationGraph>,
+    pub shooting: AnimationNodeIndex,
+    pub reloading: AnimationNodeIndex,
 }
 
 #[derive(Debug, PartialEq)]
@@ -165,11 +170,22 @@ impl Default for WeaponTrait {
 }
 
 impl Weapon {
-    pub fn new(name: String, weapon_type: WeaponType) -> Self {
+    pub fn new(
+        name: String,
+        weapon_type: WeaponType,
+        graph: Handle<AnimationGraph>,
+        shooting: AnimationNodeIndex,
+        reloading: AnimationNodeIndex,
+    ) -> Self {
         Self {
             name,
             unique_trait: WeaponTrait::define_stats_by_type(weapon_type),
             fire_cooldown: 0.0,
+            animation: WeaponAnimations {
+                graph,
+                shooting,
+                reloading,
+            },
         }
     }
 

@@ -20,12 +20,15 @@ pub struct HitDetection {
     pub hit: bool,
     pub killed: bool,
     pub despawn_time: f32,
+    pub hit_time: f32,
 }
 
 pub fn handle_hit_detection(mut hit_detection: ResMut<HitDetection>, time: Res<Time>) {
     hit_detection.despawn_time = 0.1;
 
-    if time.elapsed_secs() > hit_detection.despawn_time {
+    if hit_detection.hit
+        && time.elapsed_secs() > hit_detection.hit_time + hit_detection.despawn_time
+    {
         hit_detection.hit = false;
         hit_detection.killed = false;
     }
