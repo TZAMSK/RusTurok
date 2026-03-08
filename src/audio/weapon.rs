@@ -1,7 +1,7 @@
 use crate::{
     audio::{SFXHitmarkVolume, SFXShotVolume},
     combat::HitDetection,
-    weapons::{bullets::DespawnAfter, components::Weapon, ressources::input::WeaponInput},
+    weapons::{bullets::DespawnAfter, components::weapon::Weapon, ressources::input::WeaponInput},
 };
 use bevy::prelude::*;
 

@@ -5,7 +5,7 @@ use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 use crate::{
     camera::components::CameraSensitivity,
     player::components::Player,
-    weapons::components::{Weapon, ADS},
+    weapons::components::{ads::ADS, weapon::Weapon},
 };
 
 pub fn move_player_camera(

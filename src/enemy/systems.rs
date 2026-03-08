@@ -1,7 +1,7 @@
 use super::components::*;
 use crate::combat::{DamageMessage, HitDetection};
 use crate::player::components::Player;
-use crate::weapons::components::Weapon;
+use crate::weapons::components::weapon::Weapon;
 use bevy::prelude::*;
 
 pub fn spawn_enemy(

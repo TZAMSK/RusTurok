@@ -3,7 +3,7 @@ pub mod components;
 
 use crate::{
     player::components::Player,
-    weapons::{components::Weapon, ressources::input::WeaponInput},
+    weapons::{components::weapon::Weapon, ressources::input::WeaponInput},
 };
 use bevy::prelude::*;
 

@@ -8,7 +8,6 @@ use bevy::prelude::*;
 pub struct DMGIndicator {
     pub enemy: Entity,
     pub animation_progress: f32,
-    pub animation_complete: bool,
     pub animation_speed: f32,
     pub base_offset: Vec2,
     pub drift_right: bool,
@@ -44,7 +43,6 @@ pub fn dmg_indicator_spawn(
             DMGIndicator {
                 enemy: event.target,
                 animation_progress: 0.0,
-                animation_complete: false,
                 animation_speed: 3.0,
                 base_offset: Vec2::new(80.0, 40.0),
                 drift_right: rand::random(),

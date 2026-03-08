@@ -1,0 +1,226 @@
+use bevy::prelude::*;
+
+use crate::weapons::{
+    components::attachments::Attachment,
+    recoil::{apply_stability, auto_rifle_patterns::ak47_spray_pattern, components::Recoil},
+};
+
+#[derive(Debug, Component, PartialEq)]
+pub struct Weapon {
+    pub name: String,
+    pub unique_trait: WeaponTrait,
+    pub fire_cooldown: f32,
+    pub animation: WeaponAnimations,
+    pub attachments: Attachment,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct WeaponTrait {
+    pub bullet_speed: f32,
+    pub mag_size: u32,
+    pub current_magazine_bullets: u32,
+    pub current_reserve_bullets: u32,
+    pub stats: Stats,
+    pub total_bullets: u32,
+    pub weapon_type: WeaponType,
+    pub recoil: Recoil,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct WeaponAnimations {
+    pub graph: Handle<AnimationGraph>,
+    pub shooting: AnimationNodeIndex,
+    pub reloading: AnimationNodeIndex,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Stats {
+    pub range: f32,
+    pub stability: u32,
+    pub handling: f32,
+    pub reload: f32,
+    pub seconds_per_shot: f32,
+    pub aim_assist: f32,
+    pub zoom: f32,
+    pub level: u32,
+    pub kills: u32,
+    pub kills_next_level: u32,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum WeaponType {
+    PrimaryWeaponType(PrimaryWeaponType),
+    SecondaryWeaponType(SecondaryWeaponType),
+}
+
+#[derive(Debug, PartialEq)]
+pub enum PrimaryWeaponType {
+    HandCannon,
+    AutoRifle,
+    Sidearm,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum SecondaryWeaponType {
+    Shotgun,
+    Sniper,
+}
+
+impl Default for Stats {
+    fn default() -> Self {
+        Self {
+            range: 40.0,
+            stability: 40,
+            handling: 40.0,
+            reload: 30.0,
+            seconds_per_shot: 20.0 / 210.0,
+            aim_assist: 20.0,
+            zoom: 14.0,
+            level: 1,
+            kills: 0,
+            kills_next_level: 10,
+        }
+    }
+}
+
+impl Stats {
+    pub fn add_kill(&mut self) {
+        self.kills += 1;
+
+        if self.kills >= self.kills_next_level {
+            self.kills = 0;
+            self.level += 1;
+            self.kills_next_level = ((self.kills_next_level as f32) * 1.2) as u32;
+        }
+    }
+
+    pub fn level_progress(&self) -> f32 {
+        self.kills as f32 / self.kills_next_level as f32
+    }
+}
+
+impl Default for WeaponTrait {
+    fn default() -> Self {
+        Self {
+            bullet_speed: 1000.0,
+            mag_size: 20,
+            current_magazine_bullets: 20,
+            current_reserve_bullets: 200,
+            stats: Stats::default(),
+            total_bullets: 200,
+            weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::Sidearm),
+            recoil: Recoil {
+                base_pattern: ak47_spray_pattern(),
+                pattern: ak47_spray_pattern(),
+                current_bullet_index: 1,
+                recoil_reset_time: 0.5,
+                time_since_last_shot: 0.0,
+            },
+        }
+    }
+}
+
+impl Weapon {
+    pub fn new(
+        name: String,
+        weapon_type: WeaponType,
+        graph: Handle<AnimationGraph>,
+        shooting: AnimationNodeIndex,
+        reloading: AnimationNodeIndex,
+        attachments: Attachment,
+    ) -> Self {
+        Self {
+            name,
+            unique_trait: WeaponTrait::define_stats_by_type(weapon_type),
+            fire_cooldown: 0.0,
+            animation: WeaponAnimations {
+                graph,
+                shooting,
+                reloading,
+            },
+            attachments,
+        }
+    }
+
+    pub fn cone_fogiveness(&self) -> (f32, f32) {
+        let aim_assist = self.unique_trait.stats.aim_assist;
+        let cone = (aim_assist * 0.02).to_radians();
+        let bend = (aim_assist / 100.0) * 0.2;
+        (cone, bend)
+    }
+}
+
+impl WeaponTrait {
+    fn define_stats_by_type(weapon_type: WeaponType) -> Self {
+        match weapon_type {
+            WeaponType::PrimaryWeaponType(PrimaryWeaponType::HandCannon) => Self::hand_cannon(),
+            WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle) => Self::auto_rifle(),
+            WeaponType::PrimaryWeaponType(PrimaryWeaponType::Sidearm) => Self::sidearm(),
+            WeaponType::SecondaryWeaponType(SecondaryWeaponType::Shotgun) => Self::shotgun(),
+            WeaponType::SecondaryWeaponType(SecondaryWeaponType::Sniper) => Self::sniper(),
+        }
+    }
+
+    fn hand_cannon() -> Self {
+        Self {
+            mag_size: 11,
+            total_bullets: 120,
+            weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::HandCannon),
+            ..Self::default()
+        }
+    }
+
+    fn auto_rifle() -> Self {
+        let stability = 50;
+        Self {
+            mag_size: 80,
+            current_magazine_bullets: 80,
+            current_reserve_bullets: 600,
+            stats: Stats {
+                range: 20.0,
+                stability,
+                handling: 50.0,
+                reload: 45.0,
+                seconds_per_shot: 600.0,
+                aim_assist: 81.0,
+                zoom: 14.0,
+                level: 1,
+                kills: 0,
+                kills_next_level: 10,
+            },
+            total_bullets: 400,
+            weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
+            recoil: Recoil {
+                base_pattern: ak47_spray_pattern(),
+                pattern: apply_stability(&ak47_spray_pattern(), stability),
+                current_bullet_index: 1,
+                recoil_reset_time: 0.5,
+                time_since_last_shot: 0.0,
+            },
+
+            ..Self::default()
+        }
+    }
+
+    fn sidearm() -> Self {
+        Self::default()
+    }
+
+    fn shotgun() -> Self {
+        Self {
+            mag_size: 3,
+            total_bullets: 20,
+            weapon_type: WeaponType::SecondaryWeaponType(SecondaryWeaponType::Shotgun),
+            ..Self::default()
+        }
+    }
+
+    fn sniper() -> Self {
+        Self {
+            mag_size: 4,
+            total_bullets: 20,
+            weapon_type: WeaponType::SecondaryWeaponType(SecondaryWeaponType::Sniper),
+            ..Self::default()
+        }
+    }
+}

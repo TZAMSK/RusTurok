@@ -1,8 +1,10 @@
 use bevy::prelude::*;
 
-use super::components::{GunAnimation, Weapon, ADS};
 use crate::camera::components::{CameraSensitivity, FirstLayerCamera};
 use crate::player::components::Player;
+use crate::weapons::components::ads::ADS;
+use crate::weapons::components::animation::GunAnimation;
+use crate::weapons::components::weapon::Weapon;
 use crate::weapons::ressources::input::WeaponInput;
 
 pub fn update_ads(

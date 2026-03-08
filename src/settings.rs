@@ -1,9 +1,7 @@
 use bevy::{
-    audio::AudioPlugin,
     prelude::*,
-    window::{CursorOptions, PresentMode, WindowMode, WindowPlugin},
+    window::{CursorGrabMode, CursorOptions, PresentMode, WindowMode, WindowPlugin},
 };
-//use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
 
 pub fn settings() -> WindowPlugin {
     WindowPlugin {
@@ -14,6 +12,7 @@ pub fn settings() -> WindowPlugin {
         }),
         primary_cursor_options: Some(CursorOptions {
             visible: false,
+            grab_mode: CursorGrabMode::Confined,
             ..default()
         }),
         ..default()

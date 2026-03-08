@@ -1,6 +1,6 @@
 use crate::{
     ui::components::{BulletCount, KillsBarFill, WeaponLVLIndicator},
-    weapons::components::Weapon,
+    weapons::components::weapon::Weapon,
 };
 use bevy::prelude::*;
 

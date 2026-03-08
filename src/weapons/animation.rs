@@ -1,8 +1,11 @@
-use super::components::{GunAnimation, Weapon, ADS};
 use crate::{
     camera::components::FirstLayerCamera,
     player::components::Player,
-    weapons::transition::{WeaponAnimationStance, WeaponAnimationState},
+    weapons::components::{
+        ads::ADS,
+        animation::{GunAnimation, WeaponAnimationStance, WeaponAnimationState},
+        weapon::Weapon,
+    },
 };
 use bevy::prelude::*;
 
@@ -132,8 +135,8 @@ fn calculate_movement_offset(
     ads: &ADS,
 ) -> Vec3 {
     let phase = animation.bob.phase;
-    let mut up = 0.0;
-    let mut sideways = 0.0;
+    let up;
+    let sideways;
 
     if player.movement.is_sprinting {
         up = phase.sin().abs() * animation.bob.bob_intensity * speed;
@@ -216,7 +219,7 @@ fn apply_gun_rotation(
         }
 
         if !in_transition && !is_sliding && !is_sprinting {
-            let mut roll = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
+            let roll = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
             let mut pitch = Quat::from_rotation_x(-movement_dir.z * 0.05 * speed.min(1.0));
 
             if !is_grounded {

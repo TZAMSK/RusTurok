@@ -1,7 +1,4 @@
-use super::{
-    bullets::DespawnAfter,
-    components::{Bullet, BulletTracer},
-};
+use super::bullets::DespawnAfter;
 use crate::{
     animations::systems::{play_weapon_animation, AnimationPlayerLinked},
     camera::{components::FirstLayerCamera, renderlayers::VIEW_MODEL_RENDER_LAYER},
@@ -9,19 +6,23 @@ use crate::{
     enemy::components::Enemy,
     player::components::Player,
     weapons::{
-        components::{GunAnimation, PrimaryWeaponType, Weapon, WeaponType, ADS},
+        components::{
+            ads::ADS,
+            animation::{GunAnimation, WeaponAnimationStance, WeaponAnimationState},
+            attachments::{mag::Mag, optic::Optic, Attachment, AttachmentStats, Rarity},
+            bullet::{Bullet, BulletTracer},
+            weapon::{PrimaryWeaponType, Weapon, WeaponType},
+        },
         ressources::input::WeaponInput,
-        transition::{WeaponAnimationStance, WeaponAnimationState},
     },
 };
-use bevy::{
-    camera::visibility::RenderLayers, color::palettes::tailwind, platform::collections::HashMap,
-    prelude::*,
-};
+use bevy::{camera::visibility::RenderLayers, color::palettes::tailwind, prelude::*};
 
 struct RaycastHit {
     point: Vec3,
     entity: Option<Entity>,
+
+    #[allow(dead_code)]
     distance: f32,
 }
 
@@ -38,7 +39,7 @@ pub fn spawn_weapon(
     let initial_weapon_state =
         WeaponAnimationState::define_state_by_stance(WeaponAnimationStance::Grounded);
 
-    let ads_position = Vec3::new(0.0, -0.279, 0.094);
+    let ads_position = Vec3::new(0.0, -0.24, 0.03);
 
     let shooting_clip: Handle<AnimationClip> = asset_server.load("models/safe/ak47.glb#Animation0");
     let reloading_clip: Handle<AnimationClip> =
@@ -49,9 +50,31 @@ pub fn spawn_weapon(
     let reloading_node = graph.add_clip(reloading_clip, 1.0, graph.root);
     let graph_handle = graphs.add(graph);
 
+    let _optic = Optic {
+        stats: AttachmentStats {
+            name: String::from("Stock mag"),
+            rarity: Rarity::Standard,
+        },
+        asset: asset_server.load("models/safe/optic.glb#Scene0"),
+        zoom: 20.0,
+    };
+
+    let mag = Mag {
+        stats: AttachmentStats {
+            name: String::from("Stock mag"),
+            rarity: Rarity::Standard,
+        },
+        asset: asset_server.load("models/safe/stockmag.glb#Scene0"),
+        bullets: 20,
+    };
+
+    let attachments = Attachment::new(None, mag, None, None);
+
     let weapon_entity = commands
         .spawn((
-            SceneRoot(asset_server.load("models/safe/ak47.glb#Scene0")),
+            SceneRoot(
+                asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/safe/ak47.glb")),
+            ),
             Transform::from_xyz(
                 initial_weapon_state.translation.x,
                 initial_weapon_state.translation.y,
@@ -64,6 +87,7 @@ pub fn spawn_weapon(
                 graph_handle,
                 shooting_node,
                 reloading_node,
+                attachments,
             ),
             GunAnimation::default(),
             initial_weapon_state,
@@ -99,7 +123,7 @@ pub fn spawn_bullets(
     enemy_query: Query<(Entity, &GlobalTransform), With<Enemy>>,
     mut damage_events: MessageWriter<DamageMessage>,
 ) {
-    let Ok((player_entity, player)) = player_query.single() else {
+    let Ok((player_entity, _player)) = player_query.single() else {
         return;
     };
 

@@ -1,6 +1,6 @@
 use bevy::{animation::RepeatAnimation, prelude::*};
 
-use crate::{animations::utils::find_animation_player, weapons::components::Weapon};
+use crate::{animations::utils::find_animation_player, weapons::components::weapon::Weapon};
 
 #[derive(Component)]
 pub struct AnimationPlayerLinked;

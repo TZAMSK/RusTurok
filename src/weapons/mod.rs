@@ -1,5 +1,6 @@
 mod ads;
 pub mod animation;
+pub mod attachements;
 pub mod bullets;
 pub mod components;
 pub mod recoil;
@@ -7,10 +8,10 @@ pub mod reload;
 pub mod ressources;
 pub mod systems;
 pub mod transition;
-pub mod wobble;
 
 use bevy::prelude::*;
 
+use crate::weapons::attachements::spawn_attachment_on_sockets;
 use crate::weapons::recoil::apply_recoil;
 use crate::weapons::ressources::input::handle_weapon_input;
 use ads::update_ads;
@@ -32,6 +33,7 @@ impl Plugin for WeaponPlugin {
                 Startup,
                 spawn_weapon.after(crate::camera::systems::spawn_camera),
             )
+            .add_systems(PostUpdate, spawn_attachment_on_sockets)
             .add_systems(
                 Update,
                 (

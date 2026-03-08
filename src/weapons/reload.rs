@@ -1,11 +1,8 @@
-use bevy::{animation::RepeatAnimation, prelude::*};
+use bevy::prelude::*;
 
 use crate::{
-    animations::{
-        systems::{play_weapon_animation, AnimationPlayerLinked},
-        utils::find_animation_player,
-    },
-    weapons::components::Weapon,
+    animations::systems::{play_weapon_animation, AnimationPlayerLinked},
+    weapons::components::weapon::Weapon,
 };
 
 pub fn reload_weapon(
@@ -13,7 +10,6 @@ pub fn reload_weapon(
     mut weapon_query: Query<(&mut Weapon, &Children)>,
     children_query: Query<&Children>,
     mut anim_players: Query<&mut AnimationPlayer, With<AnimationPlayerLinked>>,
-    time: Res<Time>,
 ) {
     let Ok((mut weapon, children)) = weapon_query.single_mut() else {
         return;
