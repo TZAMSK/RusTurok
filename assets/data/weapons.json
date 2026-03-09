@@ -1,0 +1,34 @@
+{
+    "weapons": [
+        {
+            "id": "ak47",
+            "name": "AK-47",
+            "sound": "sounds/ak47.ogg",
+            "weapon_type": "AutoRifle",
+            "total_bullets": 400,
+            "stats": {
+                "range": 20.0,
+                "stability": 50.0,
+                "handling": 50.0,
+                "reload": 45.0,
+                "rounds_per_minute": 600.0,
+                "aim_assist": 81.0,
+                "zoom": 14.0
+            },
+            "assets": {
+                "model": "models/safe/ak47.glb",
+                "reload_sound": "sounds/weapons/ak47.ogg",
+                "shooting_sound": "sounds/weapons/ak47.ogg", 
+                "reload": "models/safe/ak47.glb",
+                "shooting": "models/safe/ak47.glb"
+            },
+            "attachments": {
+                "mag": null,
+                "optic": null,
+                "muzzle": null,
+                "grip": null
+            },
+            "ads_position": [0.0, -0.24, 0.03]
+        }
+    ]
+}

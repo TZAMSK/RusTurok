@@ -2,11 +2,13 @@ use bevy::prelude::*;
 
 use crate::weapons::{
     components::attachments::Attachment,
+    data::structs::{StatsData, WeaponData},
     recoil::{apply_stability, auto_rifle_patterns::ak47_spray_pattern, components::Recoil},
 };
 
 #[derive(Debug, Component, PartialEq)]
 pub struct Weapon {
+    pub id: String,
     pub name: String,
     pub unique_trait: WeaponTrait,
     pub fire_cooldown: f32,
@@ -16,7 +18,6 @@ pub struct Weapon {
 
 #[derive(Debug, PartialEq)]
 pub struct WeaponTrait {
-    pub bullet_speed: f32,
     pub mag_size: u32,
     pub current_magazine_bullets: u32,
     pub current_reserve_bullets: u32,
@@ -36,10 +37,10 @@ pub struct WeaponAnimations {
 #[derive(Debug, PartialEq)]
 pub struct Stats {
     pub range: f32,
-    pub stability: u32,
+    pub stability: f32,
     pub handling: f32,
     pub reload: f32,
-    pub seconds_per_shot: f32,
+    pub rounds_per_minute: f32,
     pub aim_assist: f32,
     pub zoom: f32,
     pub level: u32,
@@ -66,14 +67,77 @@ pub enum SecondaryWeaponType {
     Sniper,
 }
 
+impl Weapon {
+    pub fn new(
+        id: String,
+        name: String,
+        weapon_type: WeaponType,
+        graph: Handle<AnimationGraph>,
+        shooting: AnimationNodeIndex,
+        reloading: AnimationNodeIndex,
+        attachments: Attachment,
+        weapon_data: &WeaponData,
+    ) -> Self {
+        Self {
+            id,
+            name,
+            unique_trait: WeaponTrait::from_data(weapon_type, weapon_data),
+            fire_cooldown: 0.0,
+            animation: WeaponAnimations {
+                graph,
+                shooting,
+                reloading,
+            },
+            attachments,
+        }
+    }
+
+    pub fn cone_fogiveness(&self) -> (f32, f32) {
+        let aim_assist = self.unique_trait.stats.aim_assist;
+        let cone = (aim_assist * 0.02).to_radians();
+        let bend = (aim_assist / 100.0) * 0.2;
+        (cone, bend)
+    }
+}
+
+impl WeaponTrait {
+    pub fn from_data(weapon_type: WeaponType, data: &WeaponData) -> WeaponTrait {
+        let stats = Stats::from_data(&data.stats);
+        let stability = stats.stability;
+
+        let mag_size = data
+            .attachments
+            .mag
+            .as_ref()
+            .map(|m| m.bullets)
+            .unwrap_or(data.total_bullets);
+
+        Self {
+            mag_size,
+            current_magazine_bullets: mag_size,
+            current_reserve_bullets: data.total_bullets,
+            total_bullets: data.total_bullets,
+            recoil: Recoil {
+                base_pattern: ak47_spray_pattern(),
+                pattern: apply_stability(&ak47_spray_pattern(), stability),
+                recoil_reset_time: 0.5,
+                current_bullet_index: 0,
+                time_since_last_shot: 0.8,
+            },
+            stats,
+            weapon_type,
+        }
+    }
+}
+
 impl Default for Stats {
     fn default() -> Self {
         Self {
             range: 40.0,
-            stability: 40,
+            stability: 40.0,
             handling: 40.0,
             reload: 30.0,
-            seconds_per_shot: 20.0 / 210.0,
+            rounds_per_minute: 20.0 / 210.0,
             aim_assist: 20.0,
             zoom: 14.0,
             level: 1,
@@ -97,12 +161,24 @@ impl Stats {
     pub fn level_progress(&self) -> f32 {
         self.kills as f32 / self.kills_next_level as f32
     }
+
+    pub fn from_data(data: &StatsData) -> Self {
+        Self {
+            range: data.range,
+            stability: data.stability,
+            handling: data.handling,
+            reload: data.reload,
+            rounds_per_minute: data.rounds_per_minute,
+            aim_assist: data.aim_assist,
+            zoom: data.zoom,
+            ..default()
+        }
+    }
 }
 
 impl Default for WeaponTrait {
     fn default() -> Self {
         Self {
-            bullet_speed: 1000.0,
             mag_size: 20,
             current_magazine_bullets: 20,
             current_reserve_bullets: 200,
@@ -120,107 +196,16 @@ impl Default for WeaponTrait {
     }
 }
 
-impl Weapon {
-    pub fn new(
-        name: String,
-        weapon_type: WeaponType,
-        graph: Handle<AnimationGraph>,
-        shooting: AnimationNodeIndex,
-        reloading: AnimationNodeIndex,
-        attachments: Attachment,
-    ) -> Self {
-        Self {
-            name,
-            unique_trait: WeaponTrait::define_stats_by_type(weapon_type),
-            fire_cooldown: 0.0,
-            animation: WeaponAnimations {
-                graph,
-                shooting,
-                reloading,
-            },
-            attachments,
-        }
-    }
-
-    pub fn cone_fogiveness(&self) -> (f32, f32) {
-        let aim_assist = self.unique_trait.stats.aim_assist;
-        let cone = (aim_assist * 0.02).to_radians();
-        let bend = (aim_assist / 100.0) * 0.2;
-        (cone, bend)
-    }
-}
-
-impl WeaponTrait {
-    fn define_stats_by_type(weapon_type: WeaponType) -> Self {
-        match weapon_type {
-            WeaponType::PrimaryWeaponType(PrimaryWeaponType::HandCannon) => Self::hand_cannon(),
-            WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle) => Self::auto_rifle(),
-            WeaponType::PrimaryWeaponType(PrimaryWeaponType::Sidearm) => Self::sidearm(),
-            WeaponType::SecondaryWeaponType(SecondaryWeaponType::Shotgun) => Self::shotgun(),
-            WeaponType::SecondaryWeaponType(SecondaryWeaponType::Sniper) => Self::sniper(),
-        }
-    }
-
-    fn hand_cannon() -> Self {
-        Self {
-            mag_size: 11,
-            total_bullets: 120,
-            weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::HandCannon),
-            ..Self::default()
-        }
-    }
-
-    fn auto_rifle() -> Self {
-        let stability = 50;
-        Self {
-            mag_size: 80,
-            current_magazine_bullets: 80,
-            current_reserve_bullets: 600,
-            stats: Stats {
-                range: 20.0,
-                stability,
-                handling: 50.0,
-                reload: 45.0,
-                seconds_per_shot: 600.0,
-                aim_assist: 81.0,
-                zoom: 14.0,
-                level: 1,
-                kills: 0,
-                kills_next_level: 10,
-            },
-            total_bullets: 400,
-            weapon_type: WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
-            recoil: Recoil {
-                base_pattern: ak47_spray_pattern(),
-                pattern: apply_stability(&ak47_spray_pattern(), stability),
-                current_bullet_index: 1,
-                recoil_reset_time: 0.5,
-                time_since_last_shot: 0.0,
-            },
-
-            ..Self::default()
-        }
-    }
-
-    fn sidearm() -> Self {
-        Self::default()
-    }
-
-    fn shotgun() -> Self {
-        Self {
-            mag_size: 3,
-            total_bullets: 20,
-            weapon_type: WeaponType::SecondaryWeaponType(SecondaryWeaponType::Shotgun),
-            ..Self::default()
-        }
-    }
-
-    fn sniper() -> Self {
-        Self {
-            mag_size: 4,
-            total_bullets: 20,
-            weapon_type: WeaponType::SecondaryWeaponType(SecondaryWeaponType::Sniper),
-            ..Self::default()
+pub fn weapon_type_from_str(s: &str) -> WeaponType {
+    match s {
+        "AutoRifle" => WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
+        "HandCannon" => WeaponType::PrimaryWeaponType(PrimaryWeaponType::HandCannon),
+        "Sidearm" => WeaponType::PrimaryWeaponType(PrimaryWeaponType::Sidearm),
+        "Shotgun" => WeaponType::SecondaryWeaponType(SecondaryWeaponType::Shotgun),
+        "Sniper" => WeaponType::SecondaryWeaponType(SecondaryWeaponType::Sniper),
+        _ => {
+            warn!("Unknown weapon_type '{}', defaulting to Sidearm", s);
+            WeaponType::PrimaryWeaponType(PrimaryWeaponType::Sidearm)
         }
     }
 }

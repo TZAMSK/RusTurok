@@ -1,0 +1,11 @@
+{
+    "muzzles": [
+        {
+            "id": "stock_muzzle",
+            "name": "Stock Muzzle",
+            "bonus_stability": 0.0,
+            "sound": "sounds/weapons/ak47.ogg",
+            "asset": "models/safe/stockmag.glb"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "optics": [
+        {
+            "id": "red_dot",
+            "name": "Red Dot",
+            "bonus_zoom": 5.0,
+            "delta_ads_position": [0.0, -0.039, 0.064],
+            "asset": "models/safe/optic.glb"
+        }
+    ]
+}

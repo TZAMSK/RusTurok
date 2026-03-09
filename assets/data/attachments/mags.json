@@ -1,0 +1,11 @@
+{
+    "mags": [
+        {
+            "id": "stock_mag",
+            "name": "Stock Mag",
+            "bullets": 20,
+            "bonus_reload": 0.0,
+            "asset": "models/safe/stockmag.glb"
+        }
+    ]
+}

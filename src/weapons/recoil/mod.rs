@@ -41,8 +41,8 @@ pub fn apply_recoil(
     }
 }
 
-pub fn apply_stability(pattern: &[Vec2], stability: u32) -> Vec<Vec2> {
-    let calc_stability = (100.0 - stability as f32) / 100.0 + 0.05;
+pub fn apply_stability(pattern: &[Vec2], stability: f32) -> Vec<Vec2> {
+    let calc_stability = (100.0 - stability) / 100.0 + 0.05;
     pattern
         .iter()
         .map(|coord| *coord * calc_stability)

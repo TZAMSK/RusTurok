@@ -1,0 +1,9 @@
+{
+    "grips": [
+        {
+            "id": "stock_grip",
+            "name": "Stock Grip",
+            "bonus_handling": 0.0
+        }
+    ]
+}

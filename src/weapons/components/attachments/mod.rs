@@ -18,7 +18,6 @@ pub struct Attachment {
 #[derive(Debug, PartialEq)]
 pub struct AttachmentStats {
     pub name: String,
-
     pub rarity: Rarity,
 }
 
@@ -61,7 +60,6 @@ impl Default for AttachmentStats {
     fn default() -> Self {
         Self {
             name: String::from(""),
-
             rarity: Rarity::Standard,
         }
     }

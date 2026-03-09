@@ -9,10 +9,14 @@ use crate::{
         components::{
             ads::ADS,
             animation::{GunAnimation, WeaponAnimationStance, WeaponAnimationState},
-            attachments::{mag::Mag, optic::Optic, Attachment, AttachmentStats, Rarity},
+            attachments::{
+                grip::Grip, mag::Mag, muzzle::Muzzle, optic::Optic, Attachment, AttachmentStats,
+                Rarity,
+            },
             bullet::{Bullet, BulletTracer},
-            weapon::{PrimaryWeaponType, Weapon, WeaponType},
+            weapon::{weapon_type_from_str, PrimaryWeaponType, Weapon, WeaponType},
         },
+        data::database::WeaponDatabase,
         ressources::input::WeaponInput,
     },
 };
@@ -26,85 +30,139 @@ struct RaycastHit {
     distance: f32,
 }
 
+#[derive(Message)]
+pub struct WeaponSpawnEvent {
+    pub weapon_id: String,
+}
+
 pub fn spawn_weapon(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     player_query: Query<Entity, With<Player>>,
     mut graphs: ResMut<Assets<AnimationGraph>>,
+    mut weapon_db: ResMut<WeaponDatabase>,
+    mut spawn_event: MessageReader<WeaponSpawnEvent>,
 ) {
     let Ok(player_entity) = player_query.single() else {
         return;
     };
 
-    let initial_weapon_state =
-        WeaponAnimationState::define_state_by_stance(WeaponAnimationStance::Grounded);
+    for event in spawn_event.read() {
+        let id = &event.weapon_id;
 
-    let ads_position = Vec3::new(0.0, -0.24, 0.03);
+        let mag = weapon_db.get_mag("stock_mag").unwrap().clone();
+        let optic = weapon_db.get_optic("red_dot").unwrap().clone();
+        weapon_db.get_weapon_mut(id).unwrap().attach_mag(mag);
+        weapon_db.get_weapon_mut(id).unwrap().attach_optic(optic);
 
-    let shooting_clip: Handle<AnimationClip> = asset_server.load("models/safe/ak47.glb#Animation0");
-    let reloading_clip: Handle<AnimationClip> =
-        asset_server.load("models/safe/ak47.glb#Animation0");
+        let weapon_data = weapon_db.get_weapon(id).unwrap();
 
-    let mut graph = AnimationGraph::new();
-    let shooting_node = graph.add_clip(shooting_clip, 1.0, graph.root);
-    let reloading_node = graph.add_clip(reloading_clip, 1.0, graph.root);
-    let graph_handle = graphs.add(graph);
+        let initial_weapon_state =
+            WeaponAnimationState::define_state_by_stance(WeaponAnimationStance::Grounded);
 
-    let _optic = Optic {
-        stats: AttachmentStats {
-            name: String::from("Stock mag"),
-            rarity: Rarity::Standard,
-        },
-        asset: asset_server.load("models/safe/optic.glb#Scene0"),
-        zoom: 20.0,
-    };
+        let ads_position = weapon_data.ads_position;
 
-    let mag = Mag {
-        stats: AttachmentStats {
-            name: String::from("Stock mag"),
-            rarity: Rarity::Standard,
-        },
-        asset: asset_server.load("models/safe/stockmag.glb#Scene0"),
-        bullets: 20,
-    };
-
-    let attachments = Attachment::new(None, mag, None, None);
-
-    let weapon_entity = commands
-        .spawn((
-            SceneRoot(
-                asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/safe/ak47.glb")),
+        let shooting_clip: Handle<AnimationClip> = asset_server.load(
+            GltfAssetLabel::Animation(0).from_asset(
+                weapon_db
+                    .get_weapon("ak47")
+                    .unwrap()
+                    .assets
+                    .shooting
+                    .clone(),
             ),
-            Transform::from_xyz(
-                initial_weapon_state.translation.x,
-                initial_weapon_state.translation.y,
-                initial_weapon_state.translation.z,
-            ),
-            RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
-            Weapon::new(
-                "a gun".to_string(),
-                WeaponType::PrimaryWeaponType(PrimaryWeaponType::AutoRifle),
-                graph_handle,
-                shooting_node,
-                reloading_node,
-                attachments,
-            ),
-            GunAnimation::default(),
-            initial_weapon_state,
-            ADS::new(initial_weapon_state.translation, ads_position),
-        ))
-        .with_children(|parent| {
-            parent.spawn((
-                Transform {
-                    translation: Vec3::new(0.0, 0.0952, -1.440),
-                    ..default()
-                },
-                BulletTracer,
-            ));
-        })
-        .id();
+        );
 
-    commands.entity(player_entity).add_child(weapon_entity);
+        let reloading_clip: Handle<AnimationClip> = asset_server.load(
+            GltfAssetLabel::Animation(0)
+                .from_asset(weapon_db.get_weapon(id).unwrap().assets.reload.clone()),
+        );
+
+        let mut graph = AnimationGraph::new();
+        let shooting_node = graph.add_clip(shooting_clip, 1.0, graph.root);
+        let reloading_node = graph.add_clip(reloading_clip, 1.0, graph.root);
+        let graph_handle = graphs.add(graph);
+
+        let optic = weapon_data.attachments.optic.as_ref().map(|o| Optic {
+            stats: AttachmentStats {
+                name: o.name.clone(),
+                rarity: Rarity::Standard,
+            },
+            asset: asset_server.load(GltfAssetLabel::Scene(0).from_asset(o.asset.clone())),
+            zoom: o.bonus_zoom,
+        });
+
+        let mag_data = weapon_data.attachments.mag.as_ref().unwrap();
+        let mag = Mag {
+            stats: AttachmentStats {
+                name: mag_data.name.clone(),
+                rarity: Rarity::Standard,
+            },
+            asset: asset_server.load(GltfAssetLabel::Scene(0).from_asset(mag_data.asset.clone())),
+            bullets: mag_data.bullets,
+        };
+
+        let muzzle = weapon_data.attachments.muzzle.as_ref().map(|m| Muzzle {
+            stats: AttachmentStats {
+                name: m.name.clone(),
+                rarity: Rarity::Standard,
+            },
+            asset: asset_server.load(GltfAssetLabel::Scene(0).from_asset(m.asset.clone())),
+            stability: m.bonus_stability,
+        });
+
+        let grip = weapon_data.attachments.grip.as_ref().map(|g| Grip {
+            stats: AttachmentStats {
+                name: g.name.clone(),
+                rarity: Rarity::Standard,
+            },
+            handling: g.bonus_handling,
+        });
+
+        let attachments = Attachment::new(optic, mag, grip, muzzle);
+        let weapon_type = weapon_type_from_str(&weapon_data.weapon_type);
+
+        let weapon = Weapon::new(
+            id.clone(),
+            weapon_data.name.clone(),
+            weapon_type,
+            graph_handle,
+            shooting_node,
+            reloading_node,
+            attachments,
+            weapon_data,
+        );
+
+        let weapon_entity =
+            commands
+                .spawn((
+                    SceneRoot(asset_server.load(
+                        GltfAssetLabel::Scene(0).from_asset(weapon_data.assets.model.clone()),
+                    )),
+                    Transform::from_xyz(
+                        initial_weapon_state.translation.x,
+                        initial_weapon_state.translation.y,
+                        initial_weapon_state.translation.z,
+                    ),
+                    RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
+                    weapon,
+                    GunAnimation::default(),
+                    initial_weapon_state,
+                    ADS::new(initial_weapon_state.translation, ads_position),
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        Transform {
+                            translation: Vec3::new(0.0, 0.0952, -1.440),
+                            ..default()
+                        },
+                        BulletTracer,
+                    ));
+                })
+                .id();
+
+        commands.entity(player_entity).add_child(weapon_entity);
+    }
 }
 
 pub fn spawn_bullets(
@@ -179,7 +237,7 @@ pub fn spawn_bullets(
         }
 
         weapon.unique_trait.current_magazine_bullets -= 1;
-        weapon.fire_cooldown = 60.0 / weapon.unique_trait.stats.seconds_per_shot;
+        weapon.fire_cooldown = 60.0 / weapon.unique_trait.stats.rounds_per_minute;
 
         let weapon_to_hit = (hit.point - weapon_start).normalize();
 

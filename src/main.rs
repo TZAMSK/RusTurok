@@ -27,11 +27,13 @@ use crate::combat::CombatPlugin;
 use crate::enemy::EnemyPlugin;
 //use crate::settings::fps;
 use crate::ui::UIPlugin;
+use crate::weapons::data::WeaponDatabasePlugin;
 
 fn main() {
     let mut app = App::new();
 
     app.add_plugins(DefaultPlugins.set(settings()))
+        .add_plugins(WeaponDatabasePlugin)
         //.add_plugins(fps())
         .add_plugins(CrosshairPlugin)
         .add_plugins(WorldPlugin)
