@@ -97,7 +97,8 @@ fn update_velocity(
     let current_position = player_transform.translation;
 
     if state.last_player_position != Vec3::ZERO {
-        state.velocity = (current_position - state.last_player_position) / time.delta_secs();
+        state.velocity =
+            ((current_position - state.last_player_position) / time.delta_secs()) * 0.5;
     }
     state.last_player_position = current_position;
 }

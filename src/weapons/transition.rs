@@ -22,7 +22,7 @@ pub fn apply_transition_animation(
         return;
     };
 
-    for (mut weap_state, mut transform, _gun_animation, ads) in weapon_query.iter_mut() {
+    for (mut weap_state, mut transform, gun_animation, ads) in weapon_query.iter_mut() {
         if weap_state.animation_progress >= 1.0 {
             continue;
         }
@@ -31,6 +31,9 @@ pub fn apply_transition_animation(
         weap_state.animation_progress = weap_state.animation_progress.clamp(0.0, 1.0);
 
         let t = ease_out_cubic(weap_state.animation_progress);
+
+        let base_translation = weap_state.previous_coords.0.lerp(weap_state.translation, t);
+        transform.translation = base_translation + gun_animation.wobble.current_offset;
 
         let start_rotation = Quat::from_euler(
             EulerRot::YXZ,

@@ -1,14 +1,16 @@
 use super::components::FirstLayerCamera;
 use crate::camera::components::WeaponLayerCamera;
-use crate::camera::renderlayers::{VIEW_MODEL_RENDER_LAYER, WORLD_RENDER_LAYER};
+use crate::camera::renderlayers::{
+    MINI_MAP_RENDER_LAYER, VIEW_MODEL_RENDER_LAYER, WORLD_RENDER_LAYER,
+};
 use crate::{camera::components::CameraSensitivity, player::components::Player};
 use bevy::camera::visibility::RenderLayers;
-use bevy::camera::Camera3dDepthLoadOp;
+use bevy::camera::{Camera3dDepthLoadOp, Viewport};
 use bevy::prelude::*;
 
 pub const FIRST_LAYER_HIP_FOV: f32 = 120.0;
 pub const FIRST_LAYER_ADS_FOV: f32 = 70.0;
-pub const WEAPON_LAYER_FOV: f32 = 120.0;
+pub const WEAPON_LAYER_FOV: f32 = 40.0;
 
 pub fn spawn_camera(mut commands: Commands) {
     commands
@@ -30,13 +32,14 @@ pub fn spawn_camera(mut commands: Commands) {
                     fov: FIRST_LAYER_HIP_FOV.to_radians(),
                     ..default()
                 }),
+                Transform::default(),
                 RenderLayers::layer(WORLD_RENDER_LAYER),
             ));
 
             parent.spawn((
                 WeaponLayerCamera,
                 Camera3d {
-                    depth_load_op: Camera3dDepthLoadOp::Clear(1.0),
+                    depth_load_op: Camera3dDepthLoadOp::Clear(0.0),
                     ..default()
                 },
                 Camera {
@@ -49,6 +52,7 @@ pub fn spawn_camera(mut commands: Commands) {
                     near: 0.001,
                     ..default()
                 }),
+                Transform::default(),
                 RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
             ));
         });

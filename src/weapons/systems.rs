@@ -24,10 +24,7 @@ use crate::{
         util::apply_render_layers_to_children,
     },
 };
-use bevy::{
-    camera::visibility::RenderLayers, color::palettes::tailwind, prelude::*,
-    scene::SceneInstanceReady,
-};
+use bevy::{camera::visibility::RenderLayers, color::palettes::tailwind, prelude::*};
 
 struct RaycastHit {
     point: Vec3,
@@ -49,8 +46,13 @@ pub fn spawn_weapon(
     mut graphs: ResMut<Assets<AnimationGraph>>,
     mut weapon_db: ResMut<WeaponDatabase>,
     mut spawn_event: MessageReader<WeaponSpawnEvent>,
+    camera_query: Query<Entity, With<FirstLayerCamera>>,
 ) {
     let Ok(player_entity) = player_query.single() else {
+        return;
+    };
+
+    let Ok(cam_entity) = camera_query.single() else {
         return;
     };
 
@@ -163,7 +165,7 @@ pub fn spawn_weapon(
                 })
                 .id();
 
-        commands.entity(player_entity).add_child(weapon_entity);
+        commands.entity(cam_entity).add_child(weapon_entity);
     }
 }
 

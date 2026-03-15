@@ -1,22 +1,21 @@
 use bevy::{camera::visibility::RenderLayers, prelude::*, scene::SceneInstanceReady};
 
+use crate::camera::renderlayers::VIEW_MODEL_RENDER_LAYER;
+
 pub fn apply_render_layers_to_children(
     trigger: On<SceneInstanceReady>,
     mut commands: Commands,
     children: Query<&Children>,
-    transforms: Query<&Transform>,
-    query: Query<(Entity, &RenderLayers)>,
+    query: Query<Entity>,
 ) {
-    let Ok((parent, render_layers)) = query.get(trigger.entity) else {
+    let Ok(parent) = query.get(trigger.entity) else {
         return;
     };
     children.iter_descendants(parent).for_each(|entity| {
-        if transforms.contains(entity) {
-            commands.entity(entity).insert(render_layers.clone());
-        }
+        commands
+            .entity(entity)
+            .insert(RenderLayers::layer(VIEW_MODEL_RENDER_LAYER));
     });
-
-    commands.entity(trigger.observer()).despawn();
 }
 
 pub fn debug_render_layers(

@@ -102,7 +102,9 @@ impl WeaponAnimationState {
 
         let effective_previous_translation = if self.animation_progress < 1.0 {
             let t = ease_out_cubic(self.animation_progress);
-            self.previous_coords.0.lerp(self.translation, t)
+            let from = self.previous_coords.0;
+            let to = self.translation;
+            from.lerp(to, t)
         } else {
             current_translation
         };
@@ -117,8 +119,8 @@ impl WeaponAnimationState {
 
     fn sprinting() -> Self {
         Self {
-            rotation: Vec3::new(-0.55, 1.25, 0.0),
-            translation: Vec3::new(0.15, -0.4, -0.25),
+            rotation: Vec3::new(-0.45, 1.25, 0.0),
+            translation: Vec3::new(0.11, -0.16, -0.35),
             stance: WeaponAnimationStance::Sprinting,
             previous_coords: (Vec3::ZERO, Vec3::ZERO),
             animation_progress: 1.0,
@@ -129,7 +131,7 @@ impl WeaponAnimationState {
     fn sliding() -> Self {
         Self {
             rotation: Vec3::new(0.6, 0.0, 0.0),
-            translation: Vec3::new(0.061, -0.065, -0.21),
+            translation: Vec3::new(0.12, -0.12, -0.31),
             stance: WeaponAnimationStance::Sliding,
             previous_coords: (Vec3::ZERO, Vec3::ZERO),
             animation_progress: 1.0,
@@ -140,7 +142,7 @@ impl WeaponAnimationState {
     fn grounded() -> Self {
         Self {
             rotation: Vec3::new(0.0, 0.0, 0.0),
-            translation: Vec3::new(0.2, -0.13, -0.14),
+            translation: Vec3::new(0.16, -0.15, -0.55),
             stance: WeaponAnimationStance::Grounded,
             previous_coords: (Vec3::ZERO, Vec3::ZERO),
             animation_progress: 1.0,
