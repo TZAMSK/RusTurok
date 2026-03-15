@@ -1,16 +1,16 @@
-use crate::weapons::components::weapon::Weapon;
-use bevy::prelude::*;
+use crate::weapons::{components::weapon::Weapon, util::apply_render_layers_to_children};
+use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 #[derive(Component)]
 pub struct WeaponSocketsReady;
 
 pub fn spawn_attachment_on_sockets(
     mut commands: Commands,
-    weapon_query: Query<(Entity, &Weapon), Without<WeaponSocketsReady>>,
+    weapon_query: Query<(Entity, &Weapon, &RenderLayers), Without<WeaponSocketsReady>>,
     named_query: Query<(Entity, &Name)>,
     children_query: Query<&Children>,
 ) {
-    for (weapon_entity, weapon) in weapon_query.iter() {
+    for (weapon_entity, weapon, render_layers) in weapon_query.iter() {
         let descendants = iter_descendants(&children_query, weapon_entity);
         if descendants.is_empty() {
             continue;
@@ -42,10 +42,12 @@ pub fn spawn_attachment_on_sockets(
             };
 
             if name.as_str() == "mag_socket" && !found_mag {
-                let mag_asset = weapon.attachments.mag.asset.clone();
-                if mag_asset.id() != Handle::<Scene>::default().id() {
+                if let Some(mag) = &weapon.attachments.mag {
+                    let layers = render_layers.clone();
                     commands.entity(entity).with_children(|parent| {
-                        parent.spawn(SceneRoot(mag_asset));
+                        parent
+                            .spawn((SceneRoot(mag.asset.clone()), layers))
+                            .observe(apply_render_layers_to_children);
                     });
                 }
                 found_mag = true;
@@ -53,8 +55,11 @@ pub fn spawn_attachment_on_sockets(
 
             if name.as_str() == "optic_socket" && !found_optic {
                 if let Some(optic) = &weapon.attachments.optic {
+                    let layers = render_layers.clone();
                     commands.entity(entity).with_children(|parent| {
-                        parent.spawn(SceneRoot(optic.asset.clone()));
+                        parent
+                            .spawn((SceneRoot(optic.asset.clone()), layers))
+                            .observe(apply_render_layers_to_children);
                     });
                 }
                 found_optic = true;
@@ -62,8 +67,11 @@ pub fn spawn_attachment_on_sockets(
 
             if name.as_str() == "muzzle_socket" && !found_muzzle {
                 if let Some(muzzle) = &weapon.attachments.muzzle {
+                    let layers = render_layers.clone();
                     commands.entity(entity).with_children(|parent| {
-                        parent.spawn(SceneRoot(muzzle.asset.clone()));
+                        parent
+                            .spawn((SceneRoot(muzzle.asset.clone()), layers))
+                            .observe(apply_render_layers_to_children);
                     });
                 }
                 found_muzzle = true;

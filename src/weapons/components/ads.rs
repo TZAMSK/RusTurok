@@ -7,8 +7,6 @@ pub struct ADS {
     pub ads_speed: f32,
     pub hip_position: Vec3,
     pub ads_position: Vec3,
-    pub hip_fov: f32,
-    pub ads_fov: f32,
 }
 
 impl ADS {
@@ -19,8 +17,6 @@ impl ADS {
             ads_speed: 8.0,
             hip_position,
             ads_position,
-            hip_fov: 120.0,
-            ads_fov: 80.0,
         }
     }
 }

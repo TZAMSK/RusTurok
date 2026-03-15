@@ -1,7 +1,10 @@
 use super::bullets::DespawnAfter;
 use crate::{
     animations::systems::{play_weapon_animation, AnimationPlayerLinked},
-    camera::{components::FirstLayerCamera, renderlayers::VIEW_MODEL_RENDER_LAYER},
+    camera::{
+        components::{FirstLayerCamera, WeaponLayerCamera},
+        renderlayers::{VIEW_MODEL_RENDER_LAYER, WORLD_RENDER_LAYER},
+    },
     combat::DamageMessage,
     enemy::components::Enemy,
     player::components::Player,
@@ -14,13 +17,17 @@ use crate::{
                 Rarity,
             },
             bullet::{Bullet, BulletTracer},
-            weapon::{weapon_type_from_str, PrimaryWeaponType, Weapon, WeaponType},
+            weapon::{weapon_type_from_str, Weapon},
         },
         data::database::WeaponDatabase,
         ressources::input::WeaponInput,
+        util::apply_render_layers_to_children,
     },
 };
-use bevy::{camera::visibility::RenderLayers, color::palettes::tailwind, prelude::*};
+use bevy::{
+    camera::visibility::RenderLayers, color::palettes::tailwind, prelude::*,
+    scene::SceneInstanceReady,
+};
 
 struct RaycastHit {
     point: Vec3,
@@ -63,14 +70,8 @@ pub fn spawn_weapon(
         let ads_position = weapon_data.ads_position;
 
         let shooting_clip: Handle<AnimationClip> = asset_server.load(
-            GltfAssetLabel::Animation(0).from_asset(
-                weapon_db
-                    .get_weapon("ak47")
-                    .unwrap()
-                    .assets
-                    .shooting
-                    .clone(),
-            ),
+            GltfAssetLabel::Animation(0)
+                .from_asset(weapon_db.get_weapon(id).unwrap().assets.shooting.clone()),
         );
 
         let reloading_clip: Handle<AnimationClip> = asset_server.load(
@@ -92,15 +93,14 @@ pub fn spawn_weapon(
             zoom: o.bonus_zoom,
         });
 
-        let mag_data = weapon_data.attachments.mag.as_ref().unwrap();
-        let mag = Mag {
+        let mag = weapon_data.attachments.mag.as_ref().map(|m| Mag {
             stats: AttachmentStats {
-                name: mag_data.name.clone(),
+                name: m.name.clone(),
                 rarity: Rarity::Standard,
             },
-            asset: asset_server.load(GltfAssetLabel::Scene(0).from_asset(mag_data.asset.clone())),
-            bullets: mag_data.bullets,
-        };
+            asset: asset_server.load(GltfAssetLabel::Scene(0).from_asset(m.asset.clone())),
+            bullets: m.bullets,
+        });
 
         let muzzle = weapon_data.attachments.muzzle.as_ref().map(|m| Muzzle {
             stats: AttachmentStats {
@@ -150,6 +150,7 @@ pub fn spawn_weapon(
                     initial_weapon_state,
                     ADS::new(initial_weapon_state.translation, ads_position),
                 ))
+                .observe(apply_render_layers_to_children)
                 .with_children(|parent| {
                     parent.spawn((
                         Transform {
@@ -157,6 +158,7 @@ pub fn spawn_weapon(
                             ..default()
                         },
                         BulletTracer,
+                        RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
                     ));
                 })
                 .id();
@@ -192,7 +194,7 @@ pub fn spawn_bullets(
     weapon.fire_cooldown = (weapon.fire_cooldown - time.delta_secs()).max(0.0);
 
     if weapon.fire_cooldown != 0.0 {
-        weapon_input.shoot_pressed = false
+        weapon_input.shoot_pressed = false;
     }
 
     if weapon_input.shoot_pressed
@@ -284,12 +286,10 @@ fn apply_aim_assist(
     for (_, transform) in enemy_query.iter() {
         let enemy_pos = transform.translation();
         let to_enemy = (enemy_pos - start).normalize();
-
         let angle = original_direction.angle_between(to_enemy);
 
         if angle < cone {
             let distance = start.distance(enemy_pos);
-
             if best_target.is_none() || distance < best_target.unwrap().1 {
                 best_target = Some((to_enemy, distance));
             }
@@ -360,9 +360,7 @@ fn spawn_visual_tracer(
     time: &Res<Time>,
 ) {
     let distance = start.distance(hit_point);
-
-    let tracer_length = distance;
-    let tracer_mesh = meshes.add(Cylinder::new(0.03, tracer_length));
+    let tracer_mesh = meshes.add(Cylinder::new(0.03, distance));
     let tracer_material = materials.add(StandardMaterial {
         base_color: Color::from(tailwind::YELLOW_500),
         emissive: Color::from(tailwind::YELLOW_500).into(),
@@ -380,6 +378,7 @@ fn spawn_visual_tracer(
             ..default()
         },
         Bullet,
+        RenderLayers::layer(WORLD_RENDER_LAYER),
         DespawnAfter(time.elapsed_secs() + 0.05),
     ));
 }
@@ -417,6 +416,7 @@ fn spawn_muzzle_flash(
                 rotation: Quat::from_rotation_arc(rotation_axis, direction),
                 ..default()
             },
+            RenderLayers::layer(WORLD_RENDER_LAYER),
             DespawnAfter(time.elapsed_secs() + 0.05),
         ));
     }
@@ -447,6 +447,7 @@ fn spawn_impact_effect(
         Mesh3d(impact_mesh),
         MeshMaterial3d(impact_material),
         Transform::from_translation(position),
+        RenderLayers::layer(WORLD_RENDER_LAYER),
         DespawnAfter(time.elapsed_secs() + 0.1),
     ));
 }

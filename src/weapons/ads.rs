@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
-use crate::camera::components::{CameraSensitivity, FirstLayerCamera};
+use crate::camera::components::{CameraSensitivity, FirstLayerCamera, WeaponLayerCamera};
+use crate::camera::systems::{FIRST_LAYER_ADS_FOV, FIRST_LAYER_HIP_FOV};
 use crate::player::components::Player;
 use crate::weapons::components::ads::ADS;
 use crate::weapons::components::animation::GunAnimation;
@@ -10,7 +11,10 @@ use crate::weapons::ressources::input::WeaponInput;
 pub fn update_ads(
     weapon_input: Res<WeaponInput>,
     mut weapon_query: Query<(&mut ADS, &mut GunAnimation, &Weapon), With<Weapon>>,
-    mut camera_query: Query<&mut Projection, (With<Camera>, With<FirstLayerCamera>)>,
+    mut first_layer_projection: Single<
+        &mut Projection,
+        (With<FirstLayerCamera>, Without<WeaponLayerCamera>),
+    >,
     mut player_query: Query<&mut Player>,
     mut sens_query: Query<&mut CameraSensitivity>,
     time: Res<Time>,
@@ -27,10 +31,11 @@ pub fn update_ads(
         player.movement.is_sprinting = false;
     }
 
-    let mut first_ads_data: Option<(f32, f32, f32)> = None;
+    let mut ads_progress: Option<f32> = None;
+
     for (mut ads, mut gun_animation, _weapon) in weapon_query.iter_mut() {
-        if first_ads_data.is_none() {
-            first_ads_data = Some((ads.hip_fov, ads.ads_fov, ads.ads_progress));
+        if ads_progress.is_none() {
+            ads_progress = Some(ads.ads_progress);
         }
 
         let was_ads = ads.is_ads;
@@ -57,12 +62,13 @@ pub fn update_ads(
         gun_animation.wobble.intensity = 0.02 * ads_factor;
     }
 
-    if let Ok(projection) = camera_query.single_mut() {
-        if let Projection::Perspective(perspective) = projection.into_inner() {
-            if let Some((hip_fov, ads_fov, ads_progress)) = first_ads_data {
-                let target_fov = hip_fov.lerp(ads_fov, ads_progress);
-                perspective.fov = target_fov.to_radians();
-            }
-        }
+    let Projection::Perspective(perspective) = first_layer_projection.as_mut() else {
+        return;
+    };
+
+    if let Some(progress) = ads_progress {
+        perspective.fov = FIRST_LAYER_HIP_FOV
+            .lerp(FIRST_LAYER_ADS_FOV, progress)
+            .to_radians();
     }
 }

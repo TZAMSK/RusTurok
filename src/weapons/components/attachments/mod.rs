@@ -10,7 +10,7 @@ pub mod optic;
 #[derive(Debug, PartialEq)]
 pub struct Attachment {
     pub optic: Option<Optic>,
-    pub mag: Mag,
+    pub mag: Option<Mag>,
     pub grip: Option<Grip>,
     pub muzzle: Option<Muzzle>,
 }
@@ -34,11 +34,7 @@ impl Default for Attachment {
     fn default() -> Self {
         Self {
             optic: None,
-            mag: Mag {
-                stats: AttachmentStats::default(),
-                asset: Handle::default(),
-                bullets: 20,
-            },
+            mag: None,
             grip: None,
             muzzle: None,
         }
@@ -46,7 +42,12 @@ impl Default for Attachment {
 }
 
 impl Attachment {
-    pub fn new(optic: Option<Optic>, mag: Mag, grip: Option<Grip>, muzzle: Option<Muzzle>) -> Self {
+    pub fn new(
+        optic: Option<Optic>,
+        mag: Option<Mag>,
+        grip: Option<Grip>,
+        muzzle: Option<Muzzle>,
+    ) -> Self {
         Self {
             optic,
             mag,

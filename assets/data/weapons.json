@@ -28,7 +28,8 @@
                 "muzzle": null,
                 "grip": null
             },
-            "ads_position": [0.0, -0.24, 0.03]
+            "ads_position": [0.0, -0.098, -0.13]
+
         }
     ]
 }

@@ -118,7 +118,7 @@ impl WeaponAnimationState {
     fn sprinting() -> Self {
         Self {
             rotation: Vec3::new(-0.55, 1.25, 0.0),
-            translation: Vec3::new(0.4, -0.19, -0.25),
+            translation: Vec3::new(0.15, -0.4, -0.25),
             stance: WeaponAnimationStance::Sprinting,
             previous_coords: (Vec3::ZERO, Vec3::ZERO),
             animation_progress: 1.0,
@@ -129,7 +129,7 @@ impl WeaponAnimationState {
     fn sliding() -> Self {
         Self {
             rotation: Vec3::new(0.6, 0.0, 0.0),
-            translation: Vec3::new(0.16, -0.17, -0.21),
+            translation: Vec3::new(0.061, -0.065, -0.21),
             stance: WeaponAnimationStance::Sliding,
             previous_coords: (Vec3::ZERO, Vec3::ZERO),
             animation_progress: 1.0,
@@ -140,7 +140,7 @@ impl WeaponAnimationState {
     fn grounded() -> Self {
         Self {
             rotation: Vec3::new(0.0, 0.0, 0.0),
-            translation: Vec3::new(0.26, -0.35, -0.14),
+            translation: Vec3::new(0.2, -0.13, -0.14),
             stance: WeaponAnimationStance::Grounded,
             previous_coords: (Vec3::ZERO, Vec3::ZERO),
             animation_progress: 1.0,
