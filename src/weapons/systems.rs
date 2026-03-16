@@ -156,7 +156,7 @@ pub fn spawn_weapon(
                 .with_children(|parent| {
                     parent.spawn((
                         Transform {
-                            translation: Vec3::new(0.0, 0.0952, -1.440),
+                            translation: Vec3::new(0.0, 0.04, 0.3),
                             ..default()
                         },
                         BulletTracer,
@@ -362,7 +362,7 @@ fn spawn_visual_tracer(
     time: &Res<Time>,
 ) {
     let distance = start.distance(hit_point);
-    let tracer_mesh = meshes.add(Cylinder::new(0.03, distance));
+    let tracer_mesh = meshes.add(Cylinder::new(0.01, distance));
     let tracer_material = materials.add(StandardMaterial {
         base_color: Color::from(tailwind::YELLOW_500),
         emissive: Color::from(tailwind::YELLOW_500).into(),
@@ -401,7 +401,7 @@ fn spawn_muzzle_flash(
             _ => Vec3::Y,
         };
 
-        let flash_mesh = meshes.add(Plane3d::default().mesh().size(1.8, 1.8));
+        let flash_mesh = meshes.add(Plane3d::default().mesh().size(0.33, 0.33));
         let flash_material = materials.add(StandardMaterial {
             base_color_texture: Some(asset_server.load("models/muzzle_flash.png")),
             alpha_mode: AlphaMode::Blend,

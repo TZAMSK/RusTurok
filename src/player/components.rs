@@ -18,6 +18,7 @@ pub struct Level {
 #[derive(Debug, Component)]
 pub struct Movement {
     pub speed: f32,
+    pub base_speed: f32,
     pub jump_height: f32,
     pub is_grounded: bool,
     pub velocity: f32,
@@ -40,6 +41,7 @@ impl Player {
             },
             movement: Movement {
                 speed: 7.0,
+                base_speed: 7.0,
                 jump_height: 7.0,
                 is_grounded: true,
                 velocity: 0.0,

@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 
-#[derive(Debug, Component, Deref, DerefMut)]
-pub struct CameraSensitivity(pub Vec2);
+#[derive(Debug, Component)]
+pub struct CameraSensitivity {
+    pub current: Vec2,
+    pub base: Vec2,
+}
 
 #[derive(Debug, Component)]
 pub struct FirstLayerCamera;
@@ -11,6 +14,9 @@ pub struct WeaponLayerCamera;
 
 impl Default for CameraSensitivity {
     fn default() -> Self {
-        Self(Vec2::new(0.00043, 0.00043))
+        Self {
+            current: Vec2::new(0.00043, 0.00043),
+            base: Vec2::new(0.00043, 0.00043),
+        }
     }
 }

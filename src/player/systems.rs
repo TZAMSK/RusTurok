@@ -5,7 +5,10 @@ use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 use crate::{
     camera::components::CameraSensitivity,
     player::components::Player,
-    weapons::components::{ads::ADS, weapon::Weapon},
+    weapons::{
+        components::{ads::ADS, weapon::Weapon},
+        ressources::input::WeaponInput,
+    },
 };
 
 pub fn move_player_camera(
@@ -16,8 +19,8 @@ pub fn move_player_camera(
 
     let delta = accumulated_mouse_motion.delta;
     if delta != Vec2::ZERO {
-        let delta_yaw = -delta.x * camera_sensitivity.x;
-        let delta_pitch = -delta.y * camera_sensitivity.y;
+        let delta_yaw = -delta.x * camera_sensitivity.current.x;
+        let delta_pitch = -delta.y * camera_sensitivity.current.y;
 
         let (yaw, pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
 
@@ -35,6 +38,7 @@ pub fn move_player(
     mut player_query: Query<(&mut Player, &mut Transform), With<Player>>,
     mut weapon_query: Query<&mut ADS, With<Weapon>>,
     time: Res<Time>,
+    mut ads_input: ResMut<WeaponInput>,
 ) {
     if let Ok((mut player, mut player_transform)) = player_query.single_mut() {
         let mut direction = Vec3::ZERO;
@@ -47,24 +51,21 @@ pub fn move_player(
         let horizontal_forward = Vec3::new(forward.x, 0.0, forward.z);
         let horizontal_right = Vec3::new(right.x, 0.0, right.z);
 
-        //WASD
+        // WASD
         if keyboard_input.pressed(KeyCode::KeyW) {
             direction += horizontal_forward;
         }
-
         if keyboard_input.pressed(KeyCode::KeyA) {
             direction -= horizontal_right;
         }
-
         if keyboard_input.pressed(KeyCode::KeyS) {
             direction -= horizontal_forward;
         }
-
         if keyboard_input.pressed(KeyCode::KeyD) {
             direction += horizontal_right;
         }
 
-        //Sprint
+        // Sprint
         if keyboard_input.just_pressed(KeyCode::ShiftLeft) {
             player.movement.is_sprinting = true;
             player.movement.is_crouching = false;
@@ -75,6 +76,9 @@ pub fn move_player(
                 for mut ads in weapon_query.iter_mut() {
                     ads.is_ads = false;
                     ads.ads_progress = 0.0;
+                }
+                if ads_input.ads_pressed {
+                    ads_input.ads_blocked = true;
                 }
             }
         }
@@ -97,18 +101,16 @@ pub fn move_player(
             }
         }
 
-        //Slide and crouch
+        // Slide and crouch
         if keyboard_input.just_pressed(KeyCode::ControlLeft) {
             if player.movement.is_sprinting {
                 player.movement.is_sliding = true;
                 player.movement.is_crouching = false;
-
                 player.movement.slide_direction =
                     Vec3::new(horizontal_forward.x, 0.0, horizontal_forward.z).normalize();
             } else {
                 player.movement.is_crouching = !player.movement.is_crouching;
             }
-
             player.movement.is_sprinting = false;
         }
 
@@ -116,7 +118,6 @@ pub fn move_player(
             if player.movement.is_sliding {
                 speed *= 1.3;
             }
-
             if player.movement.is_crouching {
                 speed *= 0.22;
             }
@@ -136,7 +137,7 @@ pub fn move_player(
                 player.movement.slide_direction * speed * time.delta_secs();
         }
 
-        //Jump
+        // Jump
         if keyboard_input.just_pressed(KeyCode::Space) && player.movement.is_grounded {
             player.movement.velocity = player.movement.jump_height;
             player.movement.is_grounded = false;
@@ -159,7 +160,6 @@ pub fn move_player(
 pub fn ground_detection_system(mut player_query: Query<(&mut Player, &Transform), With<Player>>) {
     for (mut player, transform) in player_query.iter_mut() {
         let ground_level = 0.0;
-
         if transform.translation.y <= ground_level + 0.1 && player.movement.velocity <= 0.0 {
             player.movement.is_grounded = true;
         } else {

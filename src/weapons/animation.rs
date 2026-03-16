@@ -196,6 +196,10 @@ fn apply_gun_rotation(
 ) {
     let in_transition = weapon_animation_state.animation_progress < 1.0;
 
+    if weapon_animation_state.stance == WeaponAnimationStance::AimingDownSight || in_transition {
+        return;
+    }
+
     if speed > 0.1 && !ads.is_ads {
         if is_sprinting {
             let current_translation = gun_transform.translation;
@@ -219,7 +223,7 @@ fn apply_gun_rotation(
             );
         }
 
-        if !in_transition && !is_sliding && !is_sprinting {
+        if !is_sliding && !is_sprinting {
             let roll = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
             let mut pitch = Quat::from_rotation_x(-movement_dir.z * 0.05 * speed.min(1.0));
 
@@ -231,8 +235,6 @@ fn apply_gun_rotation(
             }
 
             gun_transform.rotation = camera_transform.rotation * roll * pitch;
-        } else if !in_transition {
-            gun_transform.rotation = camera_transform.rotation * gun_transform.rotation;
         }
     } else {
         if !matches!(
@@ -249,8 +251,6 @@ fn apply_gun_rotation(
                 current_rotation_vec,
             );
         }
-        if !in_transition {
-            gun_transform.rotation = camera_transform.rotation;
-        }
+        gun_transform.rotation = camera_transform.rotation;
     }
 }

@@ -32,9 +32,6 @@ pub fn apply_transition_animation(
 
         let t = ease_out_cubic(weap_state.animation_progress);
 
-        let base_translation = weap_state.previous_coords.0.lerp(weap_state.translation, t);
-        transform.translation = base_translation + gun_animation.wobble.current_offset;
-
         let start_rotation = Quat::from_euler(
             EulerRot::YXZ,
             weap_state.previous_coords.1.y,
