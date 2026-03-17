@@ -42,16 +42,11 @@ pub struct WeaponSpawnEvent {
 pub fn spawn_weapon(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    player_query: Query<Entity, With<Player>>,
     mut graphs: ResMut<Assets<AnimationGraph>>,
     mut weapon_db: ResMut<WeaponDatabase>,
     mut spawn_event: MessageReader<WeaponSpawnEvent>,
     camera_query: Query<Entity, With<FirstLayerCamera>>,
 ) {
-    let Ok(player_entity) = player_query.single() else {
-        return;
-    };
-
     let Ok(cam_entity) = camera_query.single() else {
         return;
     };
@@ -77,7 +72,7 @@ pub fn spawn_weapon(
         );
 
         let reloading_clip: Handle<AnimationClip> = asset_server.load(
-            GltfAssetLabel::Animation(0)
+            GltfAssetLabel::Animation(1)
                 .from_asset(weapon_db.get_weapon(id).unwrap().assets.reload.clone()),
         );
 
@@ -174,7 +169,12 @@ pub fn spawn_bullets(
     mut commands: Commands,
     player_query: Query<(Entity, &Player)>,
     bullet_tracer_query: Query<&GlobalTransform, With<BulletTracer>>,
-    mut weapon_query: Query<(&mut Weapon, &Children)>,
+    mut weapon_query: Query<(
+        &mut Weapon,
+        &Transform,
+        &mut WeaponAnimationState,
+        &Children,
+    )>,
     camera_query: Query<&GlobalTransform, (With<Camera>, With<FirstLayerCamera>)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -189,9 +189,16 @@ pub fn spawn_bullets(
         return;
     };
 
-    let Ok((mut weapon, children)) = weapon_query.single_mut() else {
+    let Ok((mut weapon, gun_transform, mut weapon_animation_state, children)) =
+        weapon_query.single_mut()
+    else {
         return;
     };
+
+    let current_translation = gun_transform.translation;
+    let current_rotation = gun_transform.rotation.to_euler(EulerRot::YXZ);
+    let current_rotation_vec =
+        Vec3::new(current_rotation.1, current_rotation.0, current_rotation.2);
 
     weapon.fire_cooldown = (weapon.fire_cooldown - time.delta_secs()).max(0.0);
 
@@ -216,6 +223,12 @@ pub fn spawn_bullets(
             children,
             &children_query,
             &mut anim_players,
+        );
+
+        weapon_animation_state.change_state_by_stance(
+            WeaponAnimationStance::Grounded,
+            current_translation,
+            current_rotation_vec,
         );
 
         let camera_direction = camera_transform.forward().normalize();
@@ -419,6 +432,24 @@ fn spawn_muzzle_flash(
                 ..default()
             },
             RenderLayers::layer(WORLD_RENDER_LAYER),
+            DespawnAfter(time.elapsed_secs() + 0.05),
+        ));
+
+        commands.spawn((
+            PointLight {
+                color: Color::srgb(252.0 / 255.0, 171.0 / 255.0, 66.0 / 255.0),
+                shadows_enabled: true,
+                radius: 0.1,
+                range: 5.0,
+                intensity: 60_000.0,
+                ..default()
+            },
+            Transform {
+                translation: position,
+                rotation: Quat::from_rotation_arc(rotation_axis, direction),
+                ..default()
+            },
+            RenderLayers::from_layers(&[WORLD_RENDER_LAYER, VIEW_MODEL_RENDER_LAYER]),
             DespawnAfter(time.elapsed_secs() + 0.05),
         ));
     }

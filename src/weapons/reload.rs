@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     animations::systems::{play_weapon_animation, AnimationPlayerLinked},
-    weapons::components::weapon::Weapon,
+    weapons::{components::weapon::Weapon, ressources::input::WeaponInput},
 };
 
 pub fn reload_weapon(
@@ -10,6 +10,7 @@ pub fn reload_weapon(
     mut weapon_query: Query<(&mut Weapon, &Children)>,
     children_query: Query<&Children>,
     mut anim_players: Query<&mut AnimationPlayer, With<AnimationPlayerLinked>>,
+    mut weapon_input: ResMut<WeaponInput>,
 ) {
     let Ok((mut weapon, children)) = weapon_query.single_mut() else {
         return;
@@ -26,6 +27,10 @@ pub fn reload_weapon(
             weapon.unique_trait.current_reserve_bullets -= to_reload;
             weapon.unique_trait.current_magazine_bullets += to_reload;
             weapon.unique_trait.recoil.current_bullet_index = 0;
+
+            if weapon_input.shoot_pressed {
+                weapon_input.shoot_blocked_until_release = true;
+            }
 
             play_weapon_animation(
                 "Reloading",

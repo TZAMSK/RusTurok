@@ -15,9 +15,8 @@ use bevy::prelude::*;
 
 use crate::weapons::attachements::spawn_attachment_on_sockets;
 use crate::weapons::recoil::apply_recoil;
-use crate::weapons::ressources::input::handle_weapon_input;
+use crate::weapons::ressources::input::{handle_weapon_input, WeaponInput};
 use crate::weapons::systems::WeaponSpawnEvent;
-use crate::weapons::util::debug_render_layers;
 use ads::update_ads;
 use animation::update_gun_animation;
 use bullets::despawn_timed_entities;
@@ -33,7 +32,7 @@ impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<WeaponSpawnEvent>()
             .add_message::<DamageMessage>()
-            .init_resource::<ressources::input::WeaponInput>()
+            .init_resource::<WeaponInput>()
             .add_systems(
                 Startup,
                 (send_initial_weapon, spawn_weapon)
@@ -44,7 +43,6 @@ impl Plugin for WeaponPlugin {
             .add_systems(
                 Update,
                 (
-                    //debug_render_layers,
                     handle_weapon_input,
                     update_ads,
                     spawn_bullets,

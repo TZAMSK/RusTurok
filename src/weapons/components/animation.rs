@@ -83,10 +83,6 @@ impl WeaponAnimationState {
         }
     }
 
-    pub fn define_ads_state(ads_position: Vec3) -> Self {
-        Self::aiming_down_sight(ads_position)
-    }
-
     pub fn change_state_by_stance(
         &mut self,
         stance: WeaponAnimationStance,
@@ -98,20 +94,6 @@ impl WeaponAnimationState {
         }
 
         let new_state = Self::define_state_by_stance(stance);
-        self.apply_new_state(new_state, current_translation, current_rotation);
-    }
-
-    pub fn change_state_to_ads(
-        &mut self,
-        ads_position: Vec3,
-        current_translation: Vec3,
-        current_rotation: Vec3,
-    ) {
-        if self.stance == WeaponAnimationStance::AimingDownSight && self.animation_progress >= 1.0 {
-            return;
-        }
-
-        let new_state = Self::aiming_down_sight(ads_position);
         self.apply_new_state(new_state, current_translation, current_rotation);
     }
 
@@ -172,22 +154,11 @@ impl WeaponAnimationState {
     fn grounded() -> Self {
         Self {
             rotation: Vec3::ZERO,
-            translation: Vec3::new(0.16, -0.15, -0.55),
+            translation: Vec3::new(0.19, -0.13, -0.55),
             stance: WeaponAnimationStance::Grounded,
             previous_coords: (Vec3::ZERO, Vec3::ZERO),
             animation_progress: 1.0,
             animation_transition_speed: 3.6,
-        }
-    }
-
-    fn aiming_down_sight(ads_position: Vec3) -> Self {
-        Self {
-            rotation: Vec3::ZERO,
-            translation: ads_position,
-            stance: WeaponAnimationStance::AimingDownSight,
-            previous_coords: (Vec3::ZERO, Vec3::ZERO),
-            animation_progress: 1.0,
-            animation_transition_speed: 5.0,
         }
     }
 }

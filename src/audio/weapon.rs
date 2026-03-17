@@ -17,7 +17,7 @@ pub fn play_weapon_audio(
         return;
     };
 
-    if weapon_input.shoot_pressed {
+    if weapon_input.shoot_pressed && !weapon_input.shoot_blocked_until_release {
         if weapon.unique_trait.recoil.current_bullet_index < weapon.unique_trait.mag_size - 1 {
             let entity = commands
                 .spawn((

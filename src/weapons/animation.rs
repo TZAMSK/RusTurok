@@ -82,7 +82,7 @@ pub fn update_gun_animation(
             speed,
             ads,
             ads_factor,
-            !player.movement.is_grounded,
+            player.movement.is_grounded,
             player.movement.is_sliding,
             player.movement.is_sprinting,
         );
@@ -225,16 +225,14 @@ fn apply_gun_rotation(
 
         if !is_sliding && !is_sprinting {
             let roll = Quat::from_rotation_z(movement_dir.x * 0.1 * speed.min(1.0));
-            let mut pitch = Quat::from_rotation_x(-movement_dir.z * 0.05 * speed.min(1.0));
-
             if !is_grounded {
                 let jump_tilt_factor = if ads.is_ads { ads_factor * 0.3 } else { 1.0 };
                 let jump_pitch = Quat::from_rotation_x(-0.2 * jump_tilt_factor);
-                pitch = jump_pitch * pitch;
                 gun_transform.translation.y -= 0.02 * jump_tilt_factor;
+                gun_transform.rotation = camera_transform.rotation * roll * jump_pitch;
+            } else {
+                gun_transform.rotation = camera_transform.rotation * roll;
             }
-
-            gun_transform.rotation = camera_transform.rotation * roll * pitch;
         }
     } else {
         if !matches!(

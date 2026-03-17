@@ -83,13 +83,7 @@ pub fn update_ads(
         let current_rotation_vec =
             Vec3::new(current_rotation.1, current_rotation.0, current_rotation.2);
 
-        if ads.is_ads {
-            weapon_animation_state.change_state_to_ads(
-                ads.ads_position,
-                current_translation,
-                current_rotation_vec,
-            );
-        } else if weapon_animation_state.stance == WeaponAnimationStance::AimingDownSight {
+        if weapon_animation_state.stance == WeaponAnimationStance::AimingDownSight {
             weapon_animation_state.change_state_by_stance(
                 WeaponAnimationStance::Grounded,
                 current_translation,
