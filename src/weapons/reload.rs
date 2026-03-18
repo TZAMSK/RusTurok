@@ -2,17 +2,30 @@ use bevy::prelude::*;
 
 use crate::{
     animations::systems::{play_weapon_animation, AnimationPlayerLinked},
-    weapons::{components::weapon::Weapon, ressources::input::WeaponInput},
+    weapons::{
+        components::{
+            animation::{WeaponAnimationStance, WeaponAnimationState},
+            weapon::Weapon,
+        },
+        ressources::input::WeaponInput,
+    },
 };
 
 pub fn reload_weapon(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut weapon_query: Query<(&mut Weapon, &Children)>,
+    mut weapon_query: Query<(
+        &mut Weapon,
+        &Transform,
+        &mut WeaponAnimationState,
+        &Children,
+    )>,
     children_query: Query<&Children>,
     mut anim_players: Query<&mut AnimationPlayer, With<AnimationPlayerLinked>>,
     mut weapon_input: ResMut<WeaponInput>,
 ) {
-    let Ok((mut weapon, children)) = weapon_query.single_mut() else {
+    let Ok((mut weapon, gun_transform, mut weapon_animation_state, children)) =
+        weapon_query.single_mut()
+    else {
         return;
     };
 
@@ -20,6 +33,16 @@ pub fn reload_weapon(
         if weapon.unique_trait.current_magazine_bullets < weapon.unique_trait.mag_size
             && weapon.unique_trait.current_reserve_bullets > 0
         {
+            let current_translation = gun_transform.translation;
+            let current_rotation = gun_transform.rotation.to_euler(EulerRot::YXZ);
+            let current_rotation_vec =
+                Vec3::new(current_rotation.1, current_rotation.0, current_rotation.2);
+            weapon_animation_state.change_state_by_stance(
+                WeaponAnimationStance::Grounded,
+                current_translation,
+                current_rotation_vec,
+            );
+
             let needed =
                 weapon.unique_trait.mag_size - weapon.unique_trait.current_magazine_bullets;
             let to_reload = needed.min(weapon.unique_trait.current_reserve_bullets);

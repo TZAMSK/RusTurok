@@ -1,11 +1,9 @@
 use super::components::FirstLayerCamera;
 use crate::camera::components::WeaponLayerCamera;
-use crate::camera::renderlayers::{
-    MINI_MAP_RENDER_LAYER, VIEW_MODEL_RENDER_LAYER, WORLD_RENDER_LAYER,
-};
+use crate::camera::renderlayers::{VIEW_MODEL_RENDER_LAYER, WORLD_RENDER_LAYER};
 use crate::{camera::components::CameraSensitivity, player::components::Player};
 use bevy::camera::visibility::RenderLayers;
-use bevy::camera::{Camera3dDepthLoadOp, Viewport};
+use bevy::camera::Camera3dDepthLoadOp;
 use bevy::prelude::*;
 
 pub const FIRST_LAYER_HIP_FOV: f32 = 120.0;

@@ -42,7 +42,7 @@ impl Player {
             movement: Movement {
                 speed: 7.0,
                 base_speed: 7.0,
-                jump_height: 7.0,
+                jump_height: 4.0,
                 is_grounded: true,
                 velocity: 0.0,
                 is_sprinting: false,
