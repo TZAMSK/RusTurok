@@ -42,6 +42,21 @@ pub fn spawn_world_model(
             ));
         }
     }
+
+    for y in -4..4 {
+        for z in -30..0 {
+            commands.spawn((
+                Mesh3d(plane_mesh.clone()),
+                MeshMaterial3d(if (y + z) % 2 == 0 {
+                    black_material.clone()
+                } else {
+                    white_material.clone()
+                }),
+                Transform::from_xyz(10.0, y as f32 * 2.0, z as f32 * 2.0)
+                    .looking_at(-Vec3::X, -Vec3::X),
+            ));
+        }
+    }
 }
 
 pub fn spawn_sun_light(mut commands: Commands) {
