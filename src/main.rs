@@ -6,6 +6,7 @@ mod crosshair;
 pub mod enemy;
 mod player;
 mod settings;
+mod shop;
 mod ui;
 mod weapons;
 mod world;
@@ -25,6 +26,7 @@ use crate::animations::GameAnimationPlugin;
 use crate::audio::GameVolumePlugin;
 use crate::combat::CombatPlugin;
 use crate::enemy::EnemyPlugin;
+use crate::shop::ShopPlugin;
 //use crate::settings::fps;
 use crate::ui::UIPlugin;
 use crate::weapons::data::WeaponDatabasePlugin;
@@ -40,6 +42,7 @@ fn main() {
         .add_plugins(EnemyPlugin)
         .add_plugins(CameraPlugin)
         .add_plugins(PlayerPlugin)
+        .add_plugins(ShopPlugin)
         .add_plugins(WeaponPlugin)
         .add_plugins(GameVolumePlugin)
         .add_plugins(CombatPlugin)
