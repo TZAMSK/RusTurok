@@ -7,7 +7,7 @@ pub mod enemy;
 mod player;
 mod settings;
 mod shop;
-mod ui;
+pub mod ui;
 mod weapons;
 mod world;
 
@@ -17,7 +17,7 @@ use bevy::prelude::*;
 use camera::CameraPlugin;
 use crosshair::CrosshairPlugin;
 use player::PlayerPlugin;
-use settings::{exit_game, settings};
+use settings::{open_menu, settings};
 use weapons::animation::GunAnimationState;
 use weapons::{BulletPlugin, WeaponPlugin};
 use world::WorldPlugin;
@@ -49,7 +49,7 @@ fn main() {
         .add_plugins(BulletPlugin)
         .add_plugins(UIPlugin)
         .add_plugins(GameAnimationPlugin)
-        .add_systems(Update, exit_game)
+        .add_systems(Update, open_menu)
         .init_resource::<GunAnimationState>();
 
     load_internal_binary_asset!(

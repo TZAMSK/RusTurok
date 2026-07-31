@@ -3,6 +3,8 @@ use bevy::{
     window::{CursorGrabMode, CursorOptions, PresentMode, WindowMode, WindowPlugin},
 };
 
+use crate::ui::game_menu::components::{GameState, MenuState};
+
 pub fn settings() -> WindowPlugin {
     WindowPlugin {
         primary_window: Some(bevy::window::Window {
@@ -33,8 +35,13 @@ pub fn fps() -> FpsOverlayPlugin {
 }
 */
 
-pub fn exit_game(keyboard: Res<ButtonInput<KeyCode>>, mut exit_writer: MessageWriter<AppExit>) {
+pub fn open_menu(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut menu_state: ResMut<NextState<MenuState>>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
     if keyboard.just_pressed(KeyCode::Escape) {
-        exit_writer.write(AppExit::Success);
+        game_state.set(GameState::Menu);
+        menu_state.set(MenuState::Main);
     }
 }

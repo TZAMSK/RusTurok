@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
-enum GameState {
+pub enum GameState {
     #[default]
     Splash,
     Menu,
@@ -18,7 +18,6 @@ pub struct Volume(pub u32);
 pub enum MenuButtonAction {
     Play,
     Settings,
-    SettingsDisplay,
     SettingsSound,
     BackToMainMenu,
     BackToSettings,
@@ -29,7 +28,6 @@ pub enum MenuButtonAction {
 pub enum MenuState {
     Main,
     Settings,
-    SettingsDisplay,
     SettingsSound,
     #[default]
     Disabled,
@@ -37,3 +35,12 @@ pub enum MenuState {
 
 #[derive(Component)]
 pub struct OnMainMenuScreen;
+
+#[derive(Component)]
+pub struct OnSoundSettingsMenuScreen;
+
+#[derive(Component)]
+pub struct OnSettingsMenuScreen;
+
+#[derive(Component)]
+pub struct SelectedOption;
